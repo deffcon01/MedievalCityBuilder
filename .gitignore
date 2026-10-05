@@ -1,0 +1,26 @@
+# Godot
+.godot/
+.import/
+.export/
+*.tmp
+
+# Build/export output
+build/
+dist/
+exports/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# C#/.NET
+bin/
+obj/
+
+# Local AI/tool configuration
+.env
+.env.*
