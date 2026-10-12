@@ -24,3 +24,5 @@ obj/
 # Local AI/tool configuration
 .env
 .env.*
+
+opencode.json
