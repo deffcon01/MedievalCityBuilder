@@ -188,3 +188,5 @@
 - **Verified**: Build succeeds; headless run loads scene and prints log.
 - **Blocked**: None.
 - **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+## Manual verification (user, F5)
+Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console verified manually on 2026-10-12. Result: pass.
