@@ -21,7 +21,7 @@
 - [x] Basic camera bounds.
 
 ### 1.2 Basic world
-- [ ] Bounded test terrain.
+- [x] Bounded test terrain.
 - [x] Terrain representation.
 - [ ] Water representation.
 - [x] Basic world seed.

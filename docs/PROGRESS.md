@@ -97,7 +97,7 @@
   - [ ] Pitch is fixed at pitchDegrees (55° placeholder)
   - [ ] No drift or jitter during combined pan/rotate/zoom
 
-### Final Status (Phase 1.1)
+## Final Status (Phase 1.1)
 - **Done**: CameraMath, CameraRig, test plane, scene integration.
 - **Verified**: Build succeeds; headless run loads scene and prints log.
 - **Blocked**: None.
@@ -176,7 +176,7 @@
 ### Manual Checklist (unverified manually)
 - [ ] After panning away from the start and rotating with Q/E, scrolling the wheel changes only the distance and does not change the view direction or yaw.
 
-### Final Status (Phase 1.1c)
+## Final Status (Phase 1.1c)
 - **Done**: All four items implemented and committed (3 commits on `phase1-camera`).
 - **Verified**: `./tools/build.ps1` → `Build succeeded!`; `./tools/run-headless.ps1` → full output recorded above, exit 0, zero WARNING/ERROR lines.
 - **Blocked**: None.
@@ -229,7 +229,7 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
     ```
 - **Notes**: All three verification commands pass. CameraMath tests cover all specified cases: ClampZoom (below min, above max, inside range), ClampToBounds (inside, each edge, outside on both axes), WrapYaw (0, 180 → 180, -180 → 180, 190 → -170, -190 → 170, 360 → 0, 540 → 180).
 
-### Final Status (Phase 1-Tests)
+## Final Status (Phase 1-Tests)
 - **Done**: xUnit test project created, CameraMath tests implemented, test runner script added, all verifications pass.
 - **Verified**: `tools/build.ps1` → Build succeeded; `tools/test.ps1` → All 14 tests passed; `tools/run-headless.ps1` → Scene loads and exits cleanly.
 - **Blocked**: None.
@@ -255,7 +255,7 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
   - `./tools/run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` → `Headless run completed successfully!`
 - **Notes**: All tests pass including the SplitMix64 seed 0 reference value (0xE220A8397B1DCDAF). RandomStreams order independence verified. WorldGenerationSettings validation works. WorldSizeTable ordering verified.
 
-### Final Status (Phase 1-2a)
+## Final Status (Phase 1-2a)
 - **Done**: All 7 implementation items + tests implemented and verified.
 - **Verified**: Build succeeds; 42 tests pass; headless run clean.
 - **Blocked**: None.
@@ -287,7 +287,7 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
   - `./tools/run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` → `Headless run completed successfully!`
 - **Notes**: All tests pass including golden test locking the current algorithm. The 54 new tests plus 42 previous = 96 total tests.
 
-### Final Status (Phase 1-2b)
+## Final Status (Phase 1-2b)
 - **Done**: All 5 implementation items + tests implemented and verified.
 - **Verified**: Build succeeds; 54 tests pass (96 total); headless run clean.
 - **Blocked**: None.
@@ -331,7 +331,7 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
     Headless run completed successfully!
     ```
 
-### Final Status (Phase 1-2b-fix)
+## Final Status (Phase 1-2b-fix)
 - **Done**: All 5 implementation items + tests implemented and verified.
 - **Verified**: Build succeeds; 56 tests pass (98 total including Phase 1-2a); headless run clean.
 - **Blocked**: None.
@@ -399,3 +399,104 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
 
 ### Next
 - Phase 1.2c — Water generation
+
+---
+
+## Phase 1-2c — Draw Heightmap as Terrain Mesh
+
+### 2026-10-13 - Implemented TerrainMeshData (src/World/TerrainMeshData.cs)
+- **What changed**:
+  1. Created `src/World/TerrainMeshData.cs`: pure C# class (no Godot types) holding `float[] Positions`, `float[] Normals`, `int[] Indices` with `VertexCount` and `TriangleCount` properties. Static `Build(Heightmap heightmap, double cellSize, double heightScale)` method.
+  2. Vertex `(x,z)` maps to world position `(x*cellSize, heightmap value * heightScale, z*cellSize)` with origin at (0,0).
+  3. Normals computed via central differences from heightmap: `n = normalize(-dh/dx, 1, -dh/dz)` using cell size and height scale, with one-sided differences at edges.
+  4. Two triangles per cell. Winding: clockwise as seen from front (visible face points up). In right-handed Y-up system, Y component of `(b-a) x (c-a)` must be NEGATIVE for every triangle `(a,b,c)`.
+  5. Validation: throws `ArgumentNullException` for null heightmap; `ArgumentOutOfRangeException` if `cellSize <= 0` or `heightScale < 0`.
+- **Commands**: 1 commit (04d6289)
+
+### 2026-10-13 - Implemented TerrainMeshData tests (tests/MedievalCityBuilder.Tests/TerrainMeshDataTests.cs)
+- **What changed**: 73 tests covering:
+  - VertexCount equals width*height, TriangleCount equals (width-1)*(height-1)*2
+  - Every index within [0, VertexCount)
+  - Positions match heightmap, cell size, height scale at several vertices
+  - Flat heightmap (all 0.5) gives normals exactly (0,1,0) and all triangles have negative Y cross product
+  - Sloped heightmap (height increasing with x) gives normals with negative X, positive Y; all normals unit length within 1e-6
+  - Build is deterministic: same input gives identical arrays
+  - Invalid arguments throw correctly
+  - Generated heightmap (seed 12345, 64x64, TerrainSettings.Default): all normals unit length within 1e-6, all triangles have negative Y cross product
+  - Small (5x4) and medium (16x16) heightmaps tested (never Large)
+- **Commands**: 1 commit (04d6289)
+
+### 2026-10-13 - Implemented TerrainView (src/Presentation/TerrainView.cs)
+- **What changed**: Godot Node3D for terrain presentation.
+  - `[Export]` fields marked PLACEHOLDER: Seed (long cast to ulong), WorldSize (enum), CellSize (default 1.0), HeightScale.
+  - In `_Ready`: builds WorldGenerationSettings with CurrentGeneratorVersion, generates heightmap via TerrainGenerator using default WorldSizeTable, calls TerrainMeshData.Build, creates ArrayMesh (Vector3[] vertices/normals, int[] indices) inside MeshInstance3D child with lit StandardMaterial3D (opaque, plain green albedo, default shading, NOT unshaded).
+  - Positions TerrainView node so terrain centered on world origin (Position = -half extent in X and Z).
+  - Exposes public `WorldExtentsXZ` property returning (minX, maxX, minZ, maxZ) after centering.
+  - Logs one line with seed, size, and vertex count.
+  - All simulation logic in src/World; this class only handles presentation.
+- **Commands**: 1 commit (d635ad0)
+
+### 2026-10-13 - Updated Main scene and CameraRig
+- **What changed**:
+  1. `scenes/Main.tscn`: Added TerrainView node as child of root. Removed TestPlane_Temporary, Marker_North_Temporary, Marker_East_Temporary. Kept assets/shaders/test_grid.gdshader. Set WorldSize.Small. Raised CameraRig pivot Y position to HeightScale * 0.5 (placeholder) via Main._Ready.
+  2. `src/Presentation/CameraRig.cs`: Added public `SetBounds(float minX, float maxX, float minZ, float maxZ)` method updating bounds fields.
+  3. `src/Presentation/Main.cs` (`_Ready`): Finds TerrainView and CameraRig, calls `CameraRig.SetBounds` using TerrainView extents inset by placeholder margin of 2 world units. Handles child-before-parent _Ready order correctly.
+- **Commands**: 2 commits (db5b0c4, 40037ff)
+
+### Verification Results
+
+#### `tools/build.ps1` output:
+```
+Building MedievalCityBuilder...
+Build succeeded!
+```
+
+#### `dotnet test tests/MedievalCityBuilder.Tests` output:
+```
+Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+Passed!  - Failed:     0, Passed:    73, Skipped:     0, Total:    73, Duration: 55 ms
+```
+(Total test suite: 73 new + 56 previous = 129 tests)
+
+#### `tools/run-headless.ps1` output:
+```
+Running MedievalCityBuilder in headless mode...
+Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+Project: .
+Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+MedievalCityBuilder: Main scene loaded
+Headless run completed successfully!
+```
+- **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. No unresolved warnings.
+
+### KNOWN LIMITATIONS
+- The camera can clip into hills because the pivot height is fixed (needs terrain-following later).
+- Height scale, cell size, and the green color are placeholders.
+
+### Manual Checklist (unverified manually)
+- [ ] Terrain visible and lit with hills and valleys
+- [ ] Terrain seen from above (not invisible/inside-out)
+- [ ] Camera pan stops at the terrain edge
+- [ ] Zoom, rotate, and pan still work
+- [ ] No console warnings
+
+### TODO.md Update
+- Checked off "Bounded test terrain" in section 1.2.
+
+### Git Log (phase1-2c-terrain-mesh)
+```
+40037ff P1-2c.4: Fix TerrainView UID reference in Main scene
+db5b0c4 P1-2c.4: Update Main scene and CameraRig with TerrainView integration
+d635ad0 P1-2c.3: Add TerrainView presentation node
+04d6289 P1-2c.1: Add TerrainMeshData class and tests
+967c7ac Merge phase1-2b-heightmap: seeded heightmap generator
+...
+```
+
+## Final Status (Phase 1-2c)
+- **Done**: All 5 implementation items + tests implemented and verified.
+- **Verified**: Build succeeds; 73 new tests pass (129 total); headless run clean with TerrainView log line and zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.2 — Water representation (or other Basic world items).
