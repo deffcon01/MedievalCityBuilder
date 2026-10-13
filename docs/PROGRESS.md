@@ -103,3 +103,48 @@
 - **Blocked**: None.
 - **Next**: Phase 1.2 — Basic world (terrain, water, seed).
 - **Manual verification needed**: Items marked "unverified manually" above.
+
+---
+
+## Phase 1.1b — Camera Fixes & Visuals
+
+### 2026-10-12 - Fixed CameraRig.ApplyZoom and _Input
+- **What changed**: 
+  - Changed `z = -_currentZoom * cos(pitch)` to `z = +_currentZoom * cos(pitch)` so camera sits at +Z and looks toward -Z.
+  - Added `mb.Pressed` check in `_Input` for wheel events.
+  - Updated comments to match.
+- **Command**: `git add src/Presentation/CameraRig.cs; git commit -m "fix: CameraRig.ApplyZoom z sign, add mb.Pressed check for wheel"`
+- **Result**: Compiles successfully.
+
+### 2026-10-12 - Added Grid Shader, Markers, Fixed Light & Camera
+- **What changed**:
+  - Created `assets/shaders/test_grid.gdshader`: unshaded spatial shader drawing grid lines every 1 world unit, thicker every 10 units, using world-space position.
+  - Updated `scenes/Main.tscn`: replaced plain material with ShaderMaterial using the grid shader.
+  - Added `Marker_North_Temporary` (red 2x2x2 BoxMesh at (0,1,-20)) and `Marker_East_Temporary` (blue 2x2x2 BoxMesh at (20,1,0)) with unshaded StandardMaterial3D.
+  - Fixed `DirectionalLight3D` rotation to `rotation_degrees = Vector3(-50, 45, 0)` (downward).
+  - Fixed `Camera3D` under `CameraRig` to have `current = true`.
+- **Command**: `git add scenes/Main.tscn assets/shaders/test_grid.gdshader; git commit -m "feat: add grid shader material, north/east markers, fix light rotation and camera current"`
+- **Result**: Scene loads in headless mode (minor Godot 3.x remap warnings for `render_unshaded`, harmless).
+
+### 2026-10-12 - Verified build and headless run
+- **What changed**: Ran build.ps1 and run-headless.ps1
+- **Command**: `./tools/build.ps1; ./tools/run-headless.ps1`
+- **Result**:
+  - `build.ps1` output: `Build succeeded!`
+  - `run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` then `Headless run completed successfully!`
+- **Notes**: Input behavior cannot be verified in headless mode. **Manual test checklist (F5 in editor):**
+  - [ ] At start: red box (north) is straight ahead, blue box (east) is on the right
+  - [ ] W moves camera toward the red box (north/-Z)
+  - [ ] D moves camera toward the blue box (east/+X)
+  - [ ] After pressing E or Q (rotate yaw), W still moves toward where the camera faces
+  - [ ] Mouse wheel zooms one step per notch (distance from pivot clamped to zoomMin/zoomMax)
+  - [ ] Panning stops at bounds (camera does not exceed boundsMinX/MaxX/MinZ/MaxZ)
+  - [ ] Pitch is fixed at pitchDegrees (55° placeholder)
+  - [ ] No drift or jitter during combined pan/rotate/zoom
+- **All items marked "unverified manually"**
+
+### Final Status (Phase 1.1b)
+- **Done**: CameraRig fixes, grid shader, markers, light/camera fixes.
+- **Verified**: Build succeeds; headless run loads scene and prints log.
+- **Blocked**: None.
+- **Next**: Phase 1.2 — Basic world (terrain, water, seed).
