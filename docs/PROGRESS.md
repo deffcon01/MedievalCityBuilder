@@ -63,3 +63,133 @@
 
 ### Next
 - Phase 1 — Technical prototype.
+
+---
+
+## Phase 1.1 — Camera
+
+### 2026-10-12 - Created CameraMath (src/Core/CameraMath.cs)
+- **What changed**: Pure C# static class with ClampZoom, ClampToBounds, WrapYaw
+- **Command**: `git add src/Core/CameraMath.cs; git commit -m "feat: add CameraMath and CameraRig with pan/rotate/zoom and test grid plane"`
+- **Result**: Compiles and is used by CameraRig.
+
+### 2026-10-12 - Created CameraRig (src/Presentation/CameraRig.cs)
+- **What changed**: Node3D pivot with child Camera3D at fixed downward pitch. WASD/arrows pan relative to yaw. Q/E rotate yaw. Mouse wheel zooms by changing camera distance. All tunable values are [Export] fields with placeholder defaults.
+- **Command**: `git add src/Presentation/CameraRig.cs; git commit -m "feat: add CameraMath and CameraRig with pan/rotate/zoom and test grid plane"`
+- **Result**: Compiles successfully. Uses CameraMath for all clamping.
+
+### 2026-10-12 - Updated Main.tscn with CameraRig and Test Plane
+- **What changed**: Replaced Camera3D with CameraRig node. Added large flat PlaneMesh (200x200) with StandardMaterial3D as temporary test plane (node name: TestPlane_Temporary).
+- **Command**: `git add scenes/Main.tscn; git commit -m "fix: use StandardMaterial3D for test plane; add Nullable enable to csproj"`
+- **Result**: Scene loads in headless mode.
+
+### 2026-10-12 - Verified build and headless run
+- **What changed**: Ran build.ps1 and run-headless.ps1
+- **Command**: `./tools/build.ps1; ./tools/run-headless.ps1`
+- **Result**:
+  - `build.ps1` output: `Build succeeded!`
+  - `run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` then `Headless run completed successfully!`
+- **Notes**: Input behavior cannot be verified in headless mode. Manual test checklist (F5 in editor):
+  - [ ] WASD / arrow keys pan camera smoothly in XZ plane relative to yaw
+  - [ ] Q / E rotate camera yaw left/right
+  - [ ] Mouse wheel zooms in/out (distance from pivot clamped to zoomMin/zoomMax)
+  - [ ] Camera does not pan beyond boundsMinX/MaxX/MinZ/MaxZ
+  - [ ] Pitch is fixed at pitchDegrees (55° placeholder)
+  - [ ] No drift or jitter during combined pan/rotate/zoom
+
+### Final Status (Phase 1.1)
+- **Done**: CameraMath, CameraRig, test plane, scene integration.
+- **Verified**: Build succeeds; headless run loads scene and prints log.
+- **Blocked**: None.
+- **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+- **Manual verification needed**: Items marked "unverified manually" above.
+
+---
+
+## Phase 1.1b — Camera Fixes & Visuals
+
+### 2026-10-12 - Fixed CameraRig.ApplyZoom and _Input
+- **What changed**: 
+  - Changed `z = -_currentZoom * cos(pitch)` to `z = +_currentZoom * cos(pitch)` so camera sits at +Z and looks toward -Z.
+  - Added `mb.Pressed` check in `_Input` for wheel events.
+  - Updated comments to match.
+- **Command**: `git add src/Presentation/CameraRig.cs; git commit -m "fix: CameraRig.ApplyZoom z sign, add mb.Pressed check for wheel"`
+- **Result**: Compiles successfully.
+
+### 2026-10-12 - Added Grid Shader, Markers, Fixed Light & Camera
+- **What changed**:
+  - Created `assets/shaders/test_grid.gdshader`: unshaded spatial shader drawing grid lines every 1 world unit, thicker every 10 units, using world-space position.
+  - Updated `scenes/Main.tscn`: replaced plain material with ShaderMaterial using the grid shader.
+  - Added `Marker_North_Temporary` (red 2x2x2 BoxMesh at (0,1,-20)) and `Marker_East_Temporary` (blue 2x2x2 BoxMesh at (20,1,0)) with unshaded StandardMaterial3D.
+  - Fixed `DirectionalLight3D` rotation to `rotation_degrees = Vector3(-50, 45, 0)` (downward).
+  - Fixed `Camera3D` under `CameraRig` to have `current = true`.
+- **Command**: `git add scenes/Main.tscn assets/shaders/test_grid.gdshader; git commit -m "feat: add grid shader material, north/east markers, fix light rotation and camera current"`
+- **Result**: Scene loads in headless mode (minor Godot 3.x remap warnings for `render_unshaded`, harmless).
+
+### 2026-10-12 - Verified build and headless run
+- **What changed**: Ran build.ps1 and run-headless.ps1
+- **Command**: `./tools/build.ps1; ./tools/run-headless.ps1`
+- **Result**:
+  - `build.ps1` output: `Build succeeded!`
+  - `run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` then `Headless run completed successfully!`
+- **Notes**: Input behavior cannot be verified in headless mode. **Manual test checklist (F5 in editor):**
+  - [ ] At start: red box (north) is straight ahead, blue box (east) is on the right
+  - [ ] W moves camera toward the red box (north/-Z)
+  - [ ] D moves camera toward the blue box (east/+X)
+  - [ ] After pressing E or Q (rotate yaw), W still moves toward where the camera faces
+  - [ ] Mouse wheel zooms one step per notch (distance from pivot clamped to zoomMin/zoomMax)
+  - [ ] Panning stops at bounds (camera does not exceed boundsMinX/MaxX/MinZ/MaxZ)
+  - [ ] Pitch is fixed at pitchDegrees (55° placeholder)
+  - [ ] No drift or jitter during combined pan/rotate/zoom
+- **All items marked "unverified manually"**
+
+---
+
+## Phase 1.1c — Camera Zoom Spin Fix & Godot 4 Warnings
+
+### 2026-10-12 - Fixed CameraRig.ApplyZoom
+- **What changed**: Removed `_camera.LookAt(Vector3.Zero, Vector3.Up)`. Camera local rotation is now set directly: `_camera.Rotation = new Vector3(-pitchRad, 0f, 0f)`. Added comment explaining LookAt uses global coordinates, which caused zoom to spin the camera once the rig moved away from the origin.
+- **Command**: `git add src/Presentation/CameraRig.cs; git commit -m "fix: CameraRig.ApplyZoom sets local rotation instead of LookAt (global coords caused zoom spin)"`
+- **Result**: Compiles successfully.
+
+### 2026-10-12 - Fixed Godot 4 material warnings in Main.tscn
+- **What changed**:
+  - Replaced `render_unshaded = true` (Godot 3.x) with `shading_mode = 0` (Godot 4 StandardMaterial3D) on RedMaterial and BlueMaterial.
+  - Corrected the CameraRig ext_resource uid from `uid://bjstp7uvpjwd4` to `uid://cl5oi883y66bg` to match `src/Presentation/CameraRig.cs.uid`. Main.cs uid (`uid://b3evb74rp8xmb`) already matched.
+- **Command**: `git add scenes/Main.tscn; git commit -m "fix: Godot 4 StandardMaterial3D shading_mode=0 and correct CameraRig uid in Main.tscn"`
+- **Result**: Scene loads in headless mode with no remap warnings.
+
+### 2026-10-12 - Verified build and headless run
+- **What changed**: Ran build.ps1 and run-headless.ps1.
+- **Command**: `./tools/build.ps1; ./tools/run-headless.ps1`
+- **Result**:
+  - `build.ps1` output: `Build succeeded!`
+  - `run-headless.ps1` full output:
+    ```
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    MedievalCityBuilder: Main scene loaded
+    ```
+  - Exit code 0.
+- **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. No unresolved warnings.
+
+### Manual Checklist (unverified manually)
+- [ ] After panning away from the start and rotating with Q/E, scrolling the wheel changes only the distance and does not change the view direction or yaw.
+
+### Final Status (Phase 1.1c)
+- **Done**: All four items implemented and committed (3 commits on `phase1-camera`).
+- **Verified**: `./tools/build.ps1` → `Build succeeded!`; `./tools/run-headless.ps1` → full output recorded above, exit 0, zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+- **Remaining**: Manual zoom-after-pan test (see checklist above) still needs F5 in the editor.
+
+### Final Status (Phase 1.1b)
+- **Done**: CameraRig fixes, grid shader, markers, light/camera fixes.
+- **Verified**: Build succeeds; headless run loads scene and prints log.
+- **Blocked**: None.
+- **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+## Manual verification (user, F5)
+Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console verified manually on 2026-10-12. Result: pass.
+
+## Manual verification (user, F5)
+Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console verified manually on 2026-10-12. Result: pass.

@@ -1,19 +1,52 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://d1vc02vo5bvxm"]
 
-[ext_resource type="Script" path="res://src/Presentation/Main.cs" id="1_main"]
+[ext_resource type="Script" uid="uid://b3evb74rp8xmb" path="res://src/Presentation/Main.cs" id="1_main"]
+[ext_resource type="Script" uid="uid://cl5oi883y66bg" path="res://src/Presentation/CameraRig.cs" id="2_rig"]
+[ext_resource type="Shader" path="res://assets/shaders/test_grid.gdshader" id="3_grid_shader"]
 
-[node name="Main" type="Node3D"]
+[sub_resource type="PlaneMesh" id="PlaneMesh"]
+size = Vector2(200, 200)
+
+[sub_resource type="ShaderMaterial" id="GridMaterial"]
+shader = ExtResource("3_grid_shader")
+
+[sub_resource type="BoxMesh" id="BoxMesh"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="StandardMaterial3D" id="RedMaterial"]
+albedo_color = Color(1, 0.2, 0.2, 1)
+shading_mode = 0
+
+[sub_resource type="StandardMaterial3D" id="BlueMaterial"]
+albedo_color = Color(0.2, 0.2, 1, 1)
+shading_mode = 0
+
+[node name="Main" type="Node3D" unique_id=569409510]
 script = ExtResource("1_main")
 
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 20)
-fov = 75.0
-near = 0.1
-far = 4000.0
+[node name="CameraRig" type="Node3D" parent="." unique_id=1653804299]
+script = ExtResource("2_rig")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 0, 0, 0)
-light_angular_distance = 0.53
+[node name="Camera3D" type="Camera3D" parent="CameraRig" unique_id=118988990]
+current = true
+
+[node name="TestPlane_Temporary" type="MeshInstance3D" parent="." unique_id=773875859]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("PlaneMesh")
+surface_material_override/0 = SubResource("GridMaterial")
+
+[node name="Marker_North_Temporary" type="MeshInstance3D" parent="." unique_id=123456789]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -20)
+mesh = SubResource("BoxMesh")
+surface_material_override/0 = SubResource("RedMaterial")
+
+[node name="Marker_East_Temporary" type="MeshInstance3D" parent="." unique_id=987654321]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 1, 0)
+mesh = SubResource("BoxMesh")
+surface_material_override/0 = SubResource("BlueMaterial")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=13515957]
+rotation_degrees = Vector3(-50, 45, 0)
 light_color = Color(1, 0.95, 0.85, 1)
 light_energy = 2.0
 light_size = 0.0
