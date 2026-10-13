@@ -237,6 +237,32 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
 
 ---
 
+## Phase 1-2a — World Seed, Generator Settings and Deterministic Random Streams
+
+### 2026-10-12 - Implemented deterministic random streams and world generation settings
+- **What changed**: 
+  1. Updated `tests/MedievalCityBuilder.Tests/MedievalCityBuilder.Tests.csproj` to compile `src/World/**/*.cs` (kept existing Core include)
+  2. Created `src/World/DeterministicRandom.cs`: SplitMix64 generator with NextUInt64(), NextDouble() using top 53 bits, NextInt() with rejection sampling
+  3. Created `src/World/RandomStreams.cs`: static Derive() with FNV-1a hash + SplitMix64 mixing; constants for Terrain, Water, Climate, Biome, RenewableResources, FiniteDeposits, StartingLocation, StartingSettlement
+  4. Created `src/World/WorldSize.cs`: enum with Small, Medium, Large
+  5. Created `src/World/WorldGenerationSettings.cs`: immutable record with Seed (ulong), GeneratorVersion (int >= 1), Size (WorldSize); const CurrentGeneratorVersion = 1
+  6. Created `src/World/WorldSizeTable.cs`: maps WorldSize to placeholder grid cell counts (Small=128, Medium=256, Large=512) as instance with defaults; all values marked PLACEHOLDER pending performance testing
+  7. Created `tests/MedievalCityBuilder.Tests/DeterministicRandomTests.cs` and `WorldSettingsTests.cs` with 42 tests covering all requirements
+- **Commands**: 6 commits on `phase1-2a-seed`
+- **Verification Results**:
+  - `./tools/build.ps1` output: `Build succeeded!`
+  - `dotnet test tests/MedievalCityBuilder.Tests` output: 42 tests passed (0 failed, 0 skipped)
+  - `./tools/run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` → `Headless run completed successfully!`
+- **Notes**: All tests pass including the SplitMix64 seed 0 reference value (0xE220A8397B1DCDAF). RandomStreams order independence verified. WorldGenerationSettings validation works. WorldSizeTable ordering verified.
+
+### Final Status (Phase 1-2a)
+- **Done**: All 7 implementation items + tests implemented and verified.
+- **Verified**: Build succeeds; 42 tests pass; headless run clean.
+- **Blocked**: None.
+- **Next**: Phase 1.2b — Bounded test terrain / terrain representation.
+
+---
+
 ## Final Report (2026-10-12)
 
 ### Done
