@@ -24,7 +24,7 @@
 - [ ] Bounded test terrain.
 - [ ] Terrain representation.
 - [ ] Water representation.
-- [ ] Basic world seed.
+- [x] Basic world seed.
 - [ ] Save/load seed.
 
 ### 1.3 Roads
