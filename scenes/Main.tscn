@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://d1vc02vo5bvxm"]
 
 [ext_resource type="Script" uid="uid://b3evb74rp8xmb" path="res://src/Presentation/Main.cs" id="1_main"]
-[ext_resource type="Script" uid="uid://bjstp7uvpjwd4" path="res://src/Presentation/CameraRig.cs" id="2_rig"]
+[ext_resource type="Script" uid="uid://cl5oi883y66bg" path="res://src/Presentation/CameraRig.cs" id="2_rig"]
 [ext_resource type="Shader" path="res://assets/shaders/test_grid.gdshader" id="3_grid_shader"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh"]
@@ -15,11 +15,11 @@ size = Vector3(2, 2, 2)
 
 [sub_resource type="StandardMaterial3D" id="RedMaterial"]
 albedo_color = Color(1, 0.2, 0.2, 1)
-render_unshaded = true
+shading_mode = 0
 
 [sub_resource type="StandardMaterial3D" id="BlueMaterial"]
 albedo_color = Color(0.2, 0.2, 1, 1)
-render_unshaded = true
+shading_mode = 0
 
 [node name="Main" type="Node3D" unique_id=569409510]
 script = ExtResource("1_main")
