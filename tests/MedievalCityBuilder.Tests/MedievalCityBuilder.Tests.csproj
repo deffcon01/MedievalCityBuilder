@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <Compile Include="..\..\src\Core\**\*.cs" />
+    <Compile Include="..\..\src\World\**\*.cs" />
   </ItemGroup>
 
 </Project>
