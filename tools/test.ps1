@@ -7,7 +7,7 @@ $testProjectPath = "tests/MedievalCityBuilder.Tests/MedievalCityBuilder.Tests.cs
 $exitCode = 0
 
 try {
-    $result = dotnet test $testProjectPath --configuration Debug --no-build
+    $result = dotnet test $testProjectPath --configuration Debug
     $exitCode = $LASTEXITCODE
 
     if ($exitCode -eq 0) {
