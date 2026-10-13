@@ -7,9 +7,9 @@ $projectPath = "MedievalCityBuilder.csproj"
 $exitCode = 0
 
 try {
-    $result = dotnet build $projectPath --configuration Release
+    $result = dotnet build $projectPath --configuration Debug
     $exitCode = $LASTEXITCODE
-    
+
     if ($exitCode -eq 0) {
         Write-Host "Build succeeded!" -ForegroundColor Green
     } else {
