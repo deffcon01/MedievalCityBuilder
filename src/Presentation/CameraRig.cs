@@ -82,7 +82,7 @@ public partial class CameraRig : Node3D
 
     public override void _Input(InputEvent ev)
     {
-        if (ev is InputEventMouseButton mb)
+        if (ev is InputEventMouseButton mb && mb.Pressed)
         {
             if (mb.ButtonIndex == MouseButton.WheelUp)
             {
@@ -104,9 +104,9 @@ public partial class CameraRig : Node3D
         if (_camera == null) return;
 
         float pitchRad = Mathf.DegToRad(pitchDegrees);
-        // Camera sits above and in front of the pivot, looking down at the pivot origin.
+        // Camera sits above and behind the pivot (at +Z), looking toward -Z.
         float y = _currentZoom * Mathf.Sin(pitchRad);
-        float z = -_currentZoom * Mathf.Cos(pitchRad);
+        float z = _currentZoom * Mathf.Cos(pitchRad);
         _camera.Position = new Vector3(0f, y, z);
         _camera.LookAt(Vector3.Zero, Vector3.Up);
     }
