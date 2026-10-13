@@ -177,10 +177,11 @@
 - [ ] After panning away from the start and rotating with Q/E, scrolling the wheel changes only the distance and does not change the view direction or yaw.
 
 ### Final Status (Phase 1.1c)
-- **Done**: CameraRig.ApplyZoom uses local rotation; Godot 4 shading_mode; uid alignment; build and headless verified.
-- **Verified**: Build succeeds; headless run loads scene and prints log with zero WARNING/ERROR lines.
+- **Done**: All four items implemented and committed (3 commits on `phase1-camera`).
+- **Verified**: `./tools/build.ps1` → `Build succeeded!`; `./tools/run-headless.ps1` → full output recorded above, exit 0, zero WARNING/ERROR lines.
 - **Blocked**: None.
 - **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+- **Remaining**: Manual zoom-after-pan test (see checklist above) still needs F5 in the editor.
 
 ### Final Status (Phase 1.1b)
 - **Done**: CameraRig fixes, grid shader, markers, light/camera fixes.
