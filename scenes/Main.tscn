@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/Presentation/Main.cs" id="1_main"]
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 20)
+fov = 75.0
+near = 0.1
+far = 4000.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 0, 0, 0)
+light_angular_distance = 0.53
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 2.0
+light_size = 0.0
+shadow_enabled = true
+shadow_max_distance = 100.0
+shadow_normal_bias = 0.15
+shadow_bias = 0.005
+shadow_blur_mode = 2

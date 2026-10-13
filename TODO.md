@@ -2,14 +2,14 @@
 
 ## Phase 0 — Project bootstrap
 
-- [ ] Create Godot 4.7.2 .NET project.
-- [ ] Confirm C# compilation.
-- [ ] Confirm Godot editor opens project.
-- [ ] Configure Git.
-- [ ] Add project documentation.
-- [ ] Configure OpenCode.
-- [ ] Create test/build commands.
-- [ ] Establish first working scene.
+- [x] Create Godot 4.7.2 .NET project.
+- [x] Confirm C# compilation.
+- [x] Confirm Godot editor opens project.
+- [x] Configure Git.
+- [x] Add project documentation.
+- [x] Configure OpenCode.
+- [x] Create test/build commands.
+- [x] Establish first working scene.
 
 ## Phase 1 — Technical prototype
 
