@@ -1,5 +1,7 @@
 using Godot;
 
+using MedievalCityBuilder.Core;
+
 namespace MedievalCityBuilder.Presentation;
 
 /// <summary>
@@ -80,19 +82,20 @@ public partial class CameraRig : Node3D
 
     public override void _Input(InputEvent ev)
     {
-        if (ev is InputEventMouseButton { ButtonId: Mouse.ButtonId.WheelUp } wheelUp)
+        if (ev is InputEventMouseButton mb)
         {
-            _currentZoom -= zoomStep;
-            _currentZoom = CameraMath.ClampZoom(_currentZoom, zoomMin, zoomMax);
-            ApplyZoom();
-            wheelUp.Position = Vector2.Zero; // consume
-        }
-        else if (ev is InputEventMouseButton { ButtonId: Mouse.ButtonId.WheelDown } wheelDown)
-        {
-            _currentZoom += zoomStep;
-            _currentZoom = CameraMath.ClampZoom(_currentZoom, zoomMin, zoomMax);
-            ApplyZoom();
-            wheelDown.Position = Vector2.Zero;
+            if (mb.ButtonIndex == MouseButton.WheelUp)
+            {
+                _currentZoom -= zoomStep;
+                _currentZoom = CameraMath.ClampZoom(_currentZoom, zoomMin, zoomMax);
+                ApplyZoom();
+            }
+            else if (mb.ButtonIndex == MouseButton.WheelDown)
+            {
+                _currentZoom += zoomStep;
+                _currentZoom = CameraMath.ClampZoom(_currentZoom, zoomMin, zoomMax);
+                ApplyZoom();
+            }
         }
     }
 
