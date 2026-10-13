@@ -22,6 +22,60 @@ namespace MedievalCityBuilder.Tests
         }
 
         [Fact]
+        public void ValueNoise_OctaveSeed_RepeatableAndDistinct()
+        {
+            ulong seed = 12345;
+            
+            // Test repeatability
+            for (int octave = 0; octave < 8; octave++)
+            {
+                ulong s1 = ValueNoise.OctaveSeed(seed, octave);
+                ulong s2 = ValueNoise.OctaveSeed(seed, octave);
+                Assert.Equal(s1, s2);
+            }
+
+            // Test 8 distinct values for octaves 0..7
+            var seeds = new HashSet<ulong>();
+            for (int octave = 0; octave < 8; octave++)
+            {
+                ulong s = ValueNoise.OctaveSeed(seed, octave);
+                Assert.True(seeds.Add(s), $"Octave {octave} produced duplicate seed");
+            }
+            Assert.Equal(8, seeds.Count);
+
+            // Test negative octave throws
+            Assert.Throws<ArgumentOutOfRangeException>(() => ValueNoise.OctaveSeed(seed, -1));
+        }
+
+        [Fact]
+        public void ValueNoise_OctaveSeeds_AreUncorrelated()
+        {
+            // For every noise seed in 0..15 (both even and odd),
+            // and for ix and iz in 0..15:
+            // LatticeValue(OctaveSeed(s,1), ix, iz) != LatticeValue(OctaveSeed(s,0), ix + d, iz)
+            // for each d in {-1, 0, 1}
+            for (ulong s = 0; s <= 15; s++)
+            {
+                ulong seed0 = ValueNoise.OctaveSeed(s, 0);
+                ulong seed1 = ValueNoise.OctaveSeed(s, 1);
+
+                for (int ix = 0; ix <= 15; ix++)
+                {
+                    for (int iz = 0; iz <= 15; iz++)
+                    {
+                        double v1 = ValueNoise.LatticeValue(seed1, ix, iz);
+
+                        for (int d = -1; d <= 1; d++)
+                        {
+                            double v0 = ValueNoise.LatticeValue(seed0, ix + d, iz);
+                            Assert.NotEqual(v1, v0);
+                        }
+                    }
+                }
+            }
+        }
+
+        [Fact]
         public void SameSettingsAndSeed_GiveIdenticalHeightmap()
         {
             var world = CreateSettings(12345);
@@ -240,6 +294,9 @@ namespace MedievalCityBuilder.Tests
             // GOLDEN TEST: These values lock the current algorithm.
             // Changing them requires incrementing WorldGenerationSettings.CurrentGeneratorVersion.
             // Obtained by running the generator once with seed 12345, GeneratorVersion 1, TerrainSettings.Default, size 64x64.
+            // NOTE: Algorithm changed before any save files existed; CurrentGeneratorVersion stays 1 because no saves or releases exist.
+            // OLD values: 0.63614976406097412, 0.50005364418029785, 0.38636791706085205
+            // NEW values: 0.26993528008460999, 0.42523997975755096, 0.24660804867744446
             
             var world = CreateSettings(12345, WorldGenerationSettings.CurrentGeneratorVersion, WorldSize.Small);
             var terrain = TerrainSettings.Default;
@@ -247,9 +304,9 @@ namespace MedievalCityBuilder.Tests
 
             // Expected values with tolerance 1e-9
             // NOTE: Changing these requires incrementing CurrentGeneratorVersion
-            double expected_0_0 = 0.63614976406097412;
-            double expected_31_31 = 0.50005364418029785;
-            double expected_63_63 = 0.38636791706085205;
+            double expected_0_0 = 0.26993528008460999;
+            double expected_31_31 = 0.42523997975755096;
+            double expected_63_63 = 0.24660804867744446;
 
             Assert.Equal(expected_0_0, hm.Get(0, 0), 9);
             Assert.Equal(expected_31_31, hm.Get(31, 31), 9);

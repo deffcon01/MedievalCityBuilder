@@ -38,13 +38,11 @@ namespace MedievalCityBuilder.World
             // Calculate total amplitude for normalization
             double totalAmplitude = 0.0;
             double amplitude = 1.0;
-            double featureSize = terrain.BaseFeatureSizeCells;
 
             for (int octave = 0; octave < terrain.Octaves; octave++)
             {
                 totalAmplitude += amplitude;
                 amplitude *= terrain.Persistence;
-                featureSize /= terrain.Lacunarity;
             }
 
             // Generate heightmap
@@ -60,12 +58,13 @@ namespace MedievalCityBuilder.World
 
                     double sum = 0.0;
                     amplitude = 1.0;
-                    featureSize = terrain.BaseFeatureSizeCells;
+                    double featureSize = terrain.BaseFeatureSizeCells;
 
                     for (int octave = 0; octave < terrain.Octaves; octave++)
                     {
-                        // Use noiseSeed + octaveIndex for each octave to get different noise patterns
-                        double sample = ValueNoise.Sample(noiseSeed + (ulong)octave, cellX / featureSize, cellZ / featureSize);
+                        // Use a well-mixed octave seed to avoid correlation between octaves
+                        ulong octaveSeed = ValueNoise.OctaveSeed(noiseSeed, octave);
+                        double sample = ValueNoise.Sample(octaveSeed, cellX / featureSize, cellZ / featureSize);
                         sum += amplitude * sample;
 
                         amplitude *= terrain.Persistence;
@@ -96,10 +95,7 @@ namespace MedievalCityBuilder.World
         public static Heightmap Generate(WorldGenerationSettings world, TerrainSettings terrain, WorldSizeTable table)
         {
             int cellsPerSide = table.GetCellsPerSide(world.Size);
-            // Heightmap is in vertices, so add 1 to get vertices from cells
-            // Actually, wait - the spec says "width and height (in vertices)"
-            // And Generate uses width/height as vertex count
-            // So we need vertices = cells + 1
+            // Heightmap dimensions are vertices, so vertices per side = cells per side + 1
             return Generate(world, terrain, cellsPerSide + 1, cellsPerSide + 1);
         }
     }

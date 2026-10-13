@@ -15,6 +15,27 @@ namespace MedievalCityBuilder.World
         private const ulong SPLITMIX64_CONSTANT3 = 0x94D049BB133111EBUL;
 
         /// <summary>
+        /// Derives a well-mixed seed for the given octave index.
+        /// Uses a SplitMix64-style finalizer to ensure octaves are uncorrelated.
+        /// </summary>
+        /// <param name="noiseSeed">Base noise seed.</param>
+        /// <param name="octave">Octave index (must be >= 0).</param>
+        /// <returns>A well-mixed seed for the octave.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when octave < 0.</exception>
+        public static ulong OctaveSeed(ulong noiseSeed, int octave)
+        {
+            if (octave < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(octave), "Octave must be >= 0.");
+            }
+
+            ulong z = noiseSeed + (ulong)(octave + 1) * SPLITMIX64_CONSTANT1;
+            z = (z ^ (z >> 30)) * SPLITMIX64_CONSTANT2;
+            z = (z ^ (z >> 27)) * SPLITMIX64_CONSTANT3;
+            return z ^ (z >> 31);
+        }
+
+        /// <summary>
         /// Generates a deterministic lattice value in [0, 1) for the given integer coordinates.
         /// Uses SplitMix64-style mixing of noiseSeed with ix and iz.
         /// No state, no ordering dependence - same inputs always produce same output.
