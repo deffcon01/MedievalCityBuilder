@@ -1,15 +1,35 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/Presentation/Main.cs" id="1_main"]
+[ext_resource type="Script" path="res://src/Presentation/CameraRig.cs" id="2_rig"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh"]
+size = Vector2(200, 200)
+subdivide_depth = 8
+subdivide_width = 8
+
+[sub_resource type="GridMaterial" id="GridMaterial"]
+grid_color = Color(0.25, 0.3, 0.35, 1)
+grid_lines = 2
+grid_size = 1.0
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
 
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 20)
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("2_rig")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 fov = 75.0
 near = 0.1
 far = 4000.0
+
+[node name="TestGridPlane" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = SubResource("PlaneMesh")
+material = SubResource("GridMaterial")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 0, 0, 0)
