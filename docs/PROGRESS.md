@@ -234,3 +234,31 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
 - **Verified**: `tools/build.ps1` → Build succeeded; `tools/test.ps1` → All 14 tests passed; `tools/run-headless.ps1` → Scene loads and exits cleanly.
 - **Blocked**: None.
 - **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+
+---
+
+## Final Report (2026-10-12)
+
+### Done
+1. Added `<Compile Remove="tests/**" />` to MedievalCityBuilder.csproj
+2. Created `tests/MedievalCityBuilder.Tests` with xUnit, targeting net8.0 (approved dependencies only)
+3. Added test project to solution with `dotnet sln add`
+4. Created `CameraMathTests.cs` with 14 tests covering all specified cases
+5. Created `tools/test.ps1` test runner script
+6. Verified all three scripts pass: build, test, headless run
+7. Updated PROGRESS.md with full verification output
+
+### Verified
+- `tools/build.ps1` builds successfully with zero errors
+- `tools/test.ps1` runs 14 tests, all pass
+- `tools/run-headless.ps1` loads scene and exits cleanly with exit code 0
+- No WARNING/ERROR lines in headless output
+- Test project uses only approved dependencies: Microsoft.NET.Test.Sdk, xunit, xunit.runner.visualstudio
+- No ProjectReference to Godot project added
+- Source files compiled via `<Compile Include>` in test project
+
+### Blocked
+- None
+
+### Next
+- Phase 1.2 — Basic world (terrain, water, seed)
