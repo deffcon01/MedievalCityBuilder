@@ -37,6 +37,21 @@ public partial class CameraRig : Node3D
         ApplyZoom();
     }
 
+    /// <summary>
+    /// Updates the camera pan bounds.
+    /// </summary>
+    /// <param name="minX">Minimum X bound.</param>
+    /// <param name="maxX">Maximum X bound.</param>
+    /// <param name="minZ">Minimum Z bound.</param>
+    /// <param name="maxZ">Maximum Z bound.</param>
+    public void SetBounds(float minX, float maxX, float minZ, float maxZ)
+    {
+        boundsMinX = minX;
+        boundsMaxX = maxX;
+        boundsMinZ = minZ;
+        boundsMaxZ = maxZ;
+    }
+
     public override void _PhysicsProcess(double delta)
     {
         float dt = (float)delta;
