@@ -1,0 +1,31 @@
+[gd_scene load_steps=3 format=3 uid://bmwq4z7r8k9j2]
+
+[ext_resource type="Script" path="res://src/Presentation/Main.cs" id="1_main"]
+
+[sub_resource type="Camera3D" id="Camera3D"]
+fov = 75.0
+near = 0.1
+far = 4000.0
+projection = 0
+
+[sub_resource type="DirectionalLight3D" id="DirectionalLight3D"]
+light_angular_distance = 0.53
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 2.0
+light_size = 0.0
+shadow_enabled = true
+shadow_max_distance = 100.0
+shadow_normal_bias = 0.15
+shadow_bias = 0.005
+shadow_blur_mode = 2
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 20)
+camera = SubResource("Camera3D")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 0, 0, 0)
+light = SubResource("DirectionalLight3D")
