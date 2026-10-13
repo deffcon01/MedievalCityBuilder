@@ -108,6 +108,9 @@ public partial class CameraRig : Node3D
         float y = _currentZoom * Mathf.Sin(pitchRad);
         float z = _currentZoom * Mathf.Cos(pitchRad);
         _camera.Position = new Vector3(0f, y, z);
-        _camera.LookAt(Vector3.Zero, Vector3.Up);
+        // LookAt uses GLOBAL coordinates, so once the rig moves away from the
+        // origin the camera would spin to track the world origin instead of the
+        // pivot. Setting the local rotation directly keeps the fixed pitch.
+        _camera.Rotation = new Vector3(-pitchRad, 0f, 0f);
     }
 }
