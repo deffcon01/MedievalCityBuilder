@@ -36,3 +36,30 @@
 - **Verified**: `dotnet build` succeeds; Godot headless run prints "MedievalCityBuilder: Main scene loaded" and exits cleanly.
 - **Blocked**: None.
 - **Next**: Phase 1 — Technical prototype (camera, basic world, roads, zoning, building development, population).
+
+---
+
+## Final Report (2026-10-12)
+
+### Done
+1. `docs/PROGRESS.md` created and updated with timestamped entries.
+2. `scenes/Main.tscn` created with Node3D root, Camera3D, DirectionalLight3D.
+3. `src/Presentation/Main.cs` attached to Main node; logs `MedievalCityBuilder: Main scene loaded` in `_Ready()`.
+4. `project.godot` updated with `run/main_scene="res://scenes/Main.tscn"`.
+5. `tools/build.ps1` (dotnet build Debug) and `tools/run-headless.ps1` (Godot console exe --headless --quit-after 5) created.
+6. Both scripts verified:
+   - `./tools/build.ps1` → `Build succeeded!`
+   - `./tools/run-headless.ps1` → `MedievalCityBuilder: Main scene loaded` → `Headless run completed successfully!`
+7. All Phase 0 checkboxes in TODO.md checked off.
+
+### Verified
+- `git log` shows 8 coherent commits on `phase0-bootstrap`.
+- Working tree clean.
+- No packages, test frameworks, or gameplay code added.
+- GOAL.md, DESIGN.md, ARCHITECTURE.md untouched.
+
+### Blocked
+- None.
+
+### Next
+- Phase 1 — Technical prototype.
