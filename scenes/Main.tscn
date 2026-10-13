@@ -5,13 +5,9 @@
 
 [sub_resource type="PlaneMesh" id="PlaneMesh"]
 size = Vector2(200, 200)
-subdivide_depth = 8
-subdivide_width = 8
 
-[sub_resource type="GridMaterial" id="GridMaterial"]
-grid_color = Color(0.25, 0.3, 0.35, 1)
-grid_lines = 2
-grid_size = 1.0
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D"]
+albedo_color = Color(0.2, 0.25, 0.2, 1)
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_main")
@@ -26,10 +22,10 @@ fov = 75.0
 near = 0.1
 far = 4000.0
 
-[node name="TestGridPlane" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+[node name="TestPlane_Temporary" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("PlaneMesh")
-material = SubResource("GridMaterial")
+surface_material_override/0 = SubResource("StandardMaterial3D")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 0, 0, 0)
