@@ -143,6 +143,45 @@
   - [ ] No drift or jitter during combined pan/rotate/zoom
 - **All items marked "unverified manually"**
 
+---
+
+## Phase 1.1c — Camera Zoom Spin Fix & Godot 4 Warnings
+
+### 2026-10-12 - Fixed CameraRig.ApplyZoom
+- **What changed**: Removed `_camera.LookAt(Vector3.Zero, Vector3.Up)`. Camera local rotation is now set directly: `_camera.Rotation = new Vector3(-pitchRad, 0f, 0f)`. Added comment explaining LookAt uses global coordinates, which caused zoom to spin the camera once the rig moved away from the origin.
+- **Command**: `git add src/Presentation/CameraRig.cs; git commit -m "fix: CameraRig.ApplyZoom sets local rotation instead of LookAt (global coords caused zoom spin)"`
+- **Result**: Compiles successfully.
+
+### 2026-10-12 - Fixed Godot 4 material warnings in Main.tscn
+- **What changed**:
+  - Replaced `render_unshaded = true` (Godot 3.x) with `shading_mode = 0` (Godot 4 StandardMaterial3D) on RedMaterial and BlueMaterial.
+  - Corrected the CameraRig ext_resource uid from `uid://bjstp7uvpjwd4` to `uid://cl5oi883y66bg` to match `src/Presentation/CameraRig.cs.uid`. Main.cs uid (`uid://b3evb74rp8xmb`) already matched.
+- **Command**: `git add scenes/Main.tscn; git commit -m "fix: Godot 4 StandardMaterial3D shading_mode=0 and correct CameraRig uid in Main.tscn"`
+- **Result**: Scene loads in headless mode with no remap warnings.
+
+### 2026-10-12 - Verified build and headless run
+- **What changed**: Ran build.ps1 and run-headless.ps1.
+- **Command**: `./tools/build.ps1; ./tools/run-headless.ps1`
+- **Result**:
+  - `build.ps1` output: `Build succeeded!`
+  - `run-headless.ps1` full output:
+    ```
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    MedievalCityBuilder: Main scene loaded
+    ```
+  - Exit code 0.
+- **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. No unresolved warnings.
+
+### Manual Checklist (unverified manually)
+- [ ] After panning away from the start and rotating with Q/E, scrolling the wheel changes only the distance and does not change the view direction or yaw.
+
+### Final Status (Phase 1.1c)
+- **Done**: CameraRig.ApplyZoom uses local rotation; Godot 4 shading_mode; uid alignment; build and headless verified.
+- **Verified**: Build succeeds; headless run loads scene and prints log with zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+
 ### Final Status (Phase 1.1b)
 - **Done**: CameraRig fixes, grid shader, markers, light/camera fixes.
 - **Verified**: Build succeeds; headless run loads scene and prints log.
