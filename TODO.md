@@ -14,11 +14,11 @@
 ## Phase 1 — Technical prototype
 
 ### 1.1 Camera
-- [ ] 3D camera.
-- [ ] Pan.
-- [ ] Rotate.
-- [ ] Zoom.
-- [ ] Basic camera bounds.
+- [x] 3D camera.
+- [x] Pan.
+- [x] Rotate.
+- [x] Zoom.
+- [x] Basic camera bounds.
 
 ### 1.2 Basic world
 - [ ] Bounded test terrain.

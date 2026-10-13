@@ -63,3 +63,43 @@
 
 ### Next
 - Phase 1 — Technical prototype.
+
+---
+
+## Phase 1.1 — Camera
+
+### 2026-10-12 - Created CameraMath (src/Core/CameraMath.cs)
+- **What changed**: Pure C# static class with ClampZoom, ClampToBounds, WrapYaw
+- **Command**: `git add src/Core/CameraMath.cs; git commit -m "feat: add CameraMath and CameraRig with pan/rotate/zoom and test grid plane"`
+- **Result**: Compiles and is used by CameraRig.
+
+### 2026-10-12 - Created CameraRig (src/Presentation/CameraRig.cs)
+- **What changed**: Node3D pivot with child Camera3D at fixed downward pitch. WASD/arrows pan relative to yaw. Q/E rotate yaw. Mouse wheel zooms by changing camera distance. All tunable values are [Export] fields with placeholder defaults.
+- **Command**: `git add src/Presentation/CameraRig.cs; git commit -m "feat: add CameraMath and CameraRig with pan/rotate/zoom and test grid plane"`
+- **Result**: Compiles successfully. Uses CameraMath for all clamping.
+
+### 2026-10-12 - Updated Main.tscn with CameraRig and Test Plane
+- **What changed**: Replaced Camera3D with CameraRig node. Added large flat PlaneMesh (200x200) with StandardMaterial3D as temporary test plane (node name: TestPlane_Temporary).
+- **Command**: `git add scenes/Main.tscn; git commit -m "fix: use StandardMaterial3D for test plane; add Nullable enable to csproj"`
+- **Result**: Scene loads in headless mode.
+
+### 2026-10-12 - Verified build and headless run
+- **What changed**: Ran build.ps1 and run-headless.ps1
+- **Command**: `./tools/build.ps1; ./tools/run-headless.ps1`
+- **Result**:
+  - `build.ps1` output: `Build succeeded!`
+  - `run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` then `Headless run completed successfully!`
+- **Notes**: Input behavior cannot be verified in headless mode. Manual test checklist (F5 in editor):
+  - [ ] WASD / arrow keys pan camera smoothly in XZ plane relative to yaw
+  - [ ] Q / E rotate camera yaw left/right
+  - [ ] Mouse wheel zooms in/out (distance from pivot clamped to zoomMin/zoomMax)
+  - [ ] Camera does not pan beyond boundsMinX/MaxX/MinZ/MaxZ
+  - [ ] Pitch is fixed at pitchDegrees (55° placeholder)
+  - [ ] No drift or jitter during combined pan/rotate/zoom
+
+### Final Status (Phase 1.1)
+- **Done**: CameraMath, CameraRig, test plane, scene integration.
+- **Verified**: Build succeeds; headless run loads scene and prints log.
+- **Blocked**: None.
+- **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+- **Manual verification needed**: Items marked "unverified manually" above.
