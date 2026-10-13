@@ -263,6 +263,38 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
 
 ---
 
+## Phase 1-2b — Seeded Heightmap Generator
+
+### 2026-10-12 - Implemented seeded heightmap generator (plain C#, no Godot)
+- **What changed**:
+  1. Created `src/World/Heightmap.cs`: class holding float[] data with Width/Height (in vertices), Get(x,z) accessor throwing ArgumentOutOfRangeException, constructor validating width/height >= 2, GetData() returning ReadOnlySpan<float>. Values normalized in [0,1].
+  2. Created `src/World/TerrainSettings.cs`: immutable record with Octaves (int >= 1), BaseFeatureSizeCells (double > 0), Persistence (double > 0), Lacunarity (double > 0). Static Default with PLACEHOLDER values and comments. Constructor validates all parameters.
+  3. Created `src/World/ValueNoise.cs`: static pure functions. LatticeValue(ulong noiseSeed, int ix, int iz) returns double in [0,1) using SplitMix64-style integer mixing. Sample(ulong noiseSeed, double x, double z) does bilinear interpolation with smoothstep weights (t*t*(3-2*t)). Uses Math.Floor only for lattice index.
+  4. Created `src/World/TerrainGenerator.cs`: static Generate(WorldGenerationSettings, TerrainSettings, int width, int height) returning Heightmap. Uses exactly one seed draw from terrain stream. Fractal noise with octaves, amplitude persistence, feature size lacunarity. Normalized by total amplitude (not map min/max). Overload using WorldSizeTable. Comment about incrementing CurrentGeneratorVersion on algorithm changes.
+  5. Created `tests/MedievalCityBuilder.Tests/TerrainGeneratorTests.cs`: 54 tests covering all requirements:
+     - Same settings and seed give identical heightmap
+     - Different seeds give different heightmaps
+     - All values in [0,1], not constant
+     - Cell height independent of map size (64x64 vs 96x96 cells match exactly)
+     - Changing TerrainSettings fields changes output
+     - Invalid settings throw; Heightmap rejects <2; Get throws out of range
+     - ValueNoise.LatticeValue in [0,1) and repeatable; Sample at integer = LatticeValue
+     - GOLDEN TEST: seed 12345, GeneratorVersion 1, TerrainSettings.Default, 64x64 checks (0,0), (31,31), (63,63) against hard-coded values (tolerance 1e-9). Note that changing these requires incrementing CurrentGeneratorVersion.
+- **Commands**: 4 commits on `phase1-2b-heightmap`
+- **Verification Results**:
+  - `./tools/build.ps1` output: `Build succeeded!`
+  - `dotnet test tests/MedievalCityBuilder.Tests` output: 54 tests passed (0 failed, 0 skipped)
+  - `./tools/run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` → `Headless run completed successfully!`
+- **Notes**: All tests pass including golden test locking the current algorithm. The 54 new tests plus 42 previous = 96 total tests.
+
+### Final Status (Phase 1-2b)
+- **Done**: All 5 implementation items + tests implemented and verified.
+- **Verified**: Build succeeds; 54 tests pass (96 total); headless run clean.
+- **Blocked**: None.
+- **Next**: Phase 1.2c — Water generation.
+
+---
+
 ## Final Report (2026-10-12)
 
 ### Done
