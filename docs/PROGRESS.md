@@ -191,5 +191,46 @@
 ## Manual verification (user, F5)
 Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console verified manually on 2026-10-12. Result: pass.
 
-## Manual verification (user, F5)
-Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console verified manually on 2026-10-12. Result: pass.
+---
+
+## Phase 1-Tests — xUnit Test Project Setup
+
+### 2026-10-12 - Added xUnit test project and CameraMath tests
+- **What changed**: 
+  - Added `<Compile Remove="tests/**" />` to MedievalCityBuilder.csproj so Godot ignores test files
+  - Created `tests/MedievalCityBuilder.Tests` xUnit project targeting net8.0
+  - Added test project to solution
+  - Created `CameraMathTests.cs` with 14 tests covering ClampZoom, ClampToBounds, WrapYaw
+  - Created `tools/test.ps1` to run dotnet test
+- **Commands**: 
+  - `dotnet new xunit -o tests/MedievalCityBuilder.Tests`
+  - `dotnet sln MedievalCityBuilder.sln add tests/MedievalCityBuilder.Tests/MedievalCityBuilder.Tests.csproj`
+  - `git add ...` (5 commits)
+- **Verification Results**:
+  - `tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `tools/test.ps1` output:
+    ```
+    Running tests for MedievalCityBuilder...
+    All tests passed!
+    ```
+  - `tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    MedievalCityBuilder: Main scene loaded
+    Headless run completed successfully!
+    ```
+- **Notes**: All three verification commands pass. CameraMath tests cover all specified cases: ClampZoom (below min, above max, inside range), ClampToBounds (inside, each edge, outside on both axes), WrapYaw (0, 180 → 180, -180 → 180, 190 → -170, -190 → 170, 360 → 0, 540 → 180).
+
+### Final Status (Phase 1-Tests)
+- **Done**: xUnit test project created, CameraMath tests implemented, test runner script added, all verifications pass.
+- **Verified**: `tools/build.ps1` → Build succeeded; `tools/test.ps1` → All 14 tests passed; `tools/run-headless.ps1` → Scene loads and exits cleanly.
+- **Blocked**: None.
+- **Next**: Phase 1.2 — Basic world (terrain, water, seed).
