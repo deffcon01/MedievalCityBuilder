@@ -500,3 +500,50 @@ d635ad0 P1-2c.3: Add TerrainView presentation node
 - **Verified**: Build succeeds; 73 new tests pass (129 total); headless run clean with TerrainView log line and zero WARNING/ERROR lines.
 - **Blocked**: None.
 - **Next**: Phase 1.2 — Water representation (or other Basic world items).
+
+---
+
+## Final Report (2026-10-13) — Phase 1-2c
+
+### Done
+1. `src/World/TerrainMeshData.cs`: Pure C# class with Positions/Normals/Indices arrays, VertexCount/TriangleCount properties, and static Build() method. Vertex mapping, central-difference normals, two triangles per cell, correct clockwise winding for Y-up front-face-up, argument validation.
+2. `tests/MedievalCityBuilder.Tests/TerrainMeshDataTests.cs`: 73 tests covering vertex/triangle counts, index bounds, position correctness, flat/sloped normal verification, negative Y cross product for all triangles, determinism, invalid arguments, and generated heightmap validation.
+3. `src/Presentation/TerrainView.cs`: Godot Node3D with PLACEHOLDER exports (Seed, WorldSize, CellSize, HeightScale). Generates heightmap, builds mesh, creates ArrayMesh with lit StandardMaterial3D (green albedo), centers terrain, exposes WorldExtentsXZ, logs seed/size/vertex count.
+4. `scenes/Main.tscn`: Added TerrainView node, removed TestPlane_Temporary/Marker_North_Temporary/Marker_East_Temporary, kept test_grid shader, set WorldSize.Small.
+5. `src/Presentation/CameraRig.cs`: Added public SetBounds(minX, maxX, minZ, maxZ) method.
+6. `src/Presentation/Main.cs`: Connects TerrainView and CameraRig in _Ready(), sets camera bounds inset by 2 units, raises CameraRig pivot Y to HeightScale * 0.5.
+7. `TODO.md`: Checked off "Bounded test terrain" in section 1.2.
+8. `docs/PROGRESS.md`: Full verification output recorded.
+
+### Verified
+- `tools/build.ps1` → `Build succeeded!`
+- `dotnet test tests/MedievalCityBuilder.Tests` → 73 new tests pass (129 total including previous phases), 0 failed
+- `tools/run-headless.ps1` → Scene loads, prints TerrainView log line, exits 0, **zero WARNING/ERROR lines**
+- No packages added, no GOAL.md/DESIGN.md/ARCHITECTURE.md changes, no water/roads/zoning/save-load/gameplay code added
+- Core rule respected: simulation logic in src/World, presentation only in src/Presentation
+
+### Known Limitations
+- Camera can clip into hills (fixed pivot height; needs terrain-following later)
+- Height scale, cell size, green albedo are placeholders
+
+### Manual Checklist (unverified manually - F5 in editor)
+- [ ] Terrain visible and lit with hills and valleys
+- [ ] Terrain seen from above (not invisible/inside-out)
+- [ ] Camera pan stops at the terrain edge
+- [ ] Zoom, rotate, and pan still work
+- [ ] No console warnings
+
+### Git Log (phase1-2c-terrain-mesh)
+```
+0e4f3fd P1-2c.5: Update PROGRESS.md and TODO.md
+40037ff P1-2c.4: Fix TerrainView UID reference in Main scene
+db5b0c4 P1-2c.4: Update Main scene and CameraRig with TerrainView integration
+d635ad0 P1-2c.3: Add TerrainView presentation node
+04d6289 P1-2c.1: Add TerrainMeshData class and tests
+```
+
+### Status
+- **Done**: All scope items implemented and verified.
+- **Verified**: All three verification commands pass.
+- **Blocked**: None.
+- **Next**: Phase 1.2 — Water representation or other Basic world items.
