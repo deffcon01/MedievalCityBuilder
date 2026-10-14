@@ -18,7 +18,6 @@ public partial class Main : Node3D
         cameraRig.SetBounds(minX + margin, maxX - margin, minZ + margin, maxZ - margin);
 
         // Raise CameraRig pivot Y to HeightScale * 0.5 as placeholder
-        // (HeightScale is 10.0 by default in TerrainView)
-        cameraRig.Position = new Vector3(cameraRig.Position.X, (float)(10.0 * 0.5), cameraRig.Position.Z);
+        cameraRig.Position = new Vector3(cameraRig.Position.X, (float)(terrainView.HeightScaleValue * 0.5), cameraRig.Position.Z);
     }
 }
