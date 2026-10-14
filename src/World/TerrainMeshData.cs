@@ -92,9 +92,11 @@ namespace MedievalCityBuilder.World
             }
 
             // Compute normals using central differences (one-sided at edges)
-            // n = normalize(-dh/dx, 1, -dh/dz)
+            // dhdx/dhdz are changes in normalized height per world unit.
+            // World Y = normalized height * heightScale, so world slope = dhdx * heightScale.
+            // Normal = normalize(-dhdx * heightScale, 1, -dhdz * heightScale).
             double invCellSize = 1.0 / cellSize;
-            double invHeightScale = heightScale > 0.0 ? 1.0 / heightScale : 0.0;
+            double hScale = heightScale;
 
             for (int z = 0; z < height; z++)
             {
@@ -136,11 +138,10 @@ namespace MedievalCityBuilder.World
                         dhdz = (heightmap.Get(x, z + 1) - heightmap.Get(x, z - 1)) * 0.5 * invCellSize;
                     }
 
-                    // Normal: (-dh/dx, 1/heightScale, -dh/dz) normalized
-                    // The 1/heightScale factor converts the vertical component to match the scaled positions
-                    double nx = -dhdx * invHeightScale;
+                    // Normal: (-dhdx * heightScale, 1, -dhdz * heightScale) normalized
+                    double nx = -dhdx * hScale;
                     double ny = 1.0;
-                    double nz = -dhdz * invHeightScale;
+                    double nz = -dhdz * hScale;
 
                     double len = Math.Sqrt(nx * nx + ny * ny + nz * nz);
                     if (len > 0.0)
