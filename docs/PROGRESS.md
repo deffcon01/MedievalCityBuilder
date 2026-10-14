@@ -672,3 +672,5 @@ a964335 Merge phase1-2c-terrain-mesh: terrain mesh from seeded heightmap
 - **Verified**: Build succeeds; 98 tests pass (20 new + 78 previous); headless run clean with both TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
 - **Blocked**: None.
 - **Next**: Phase 1.3 — Roads or other Basic world items.
+## Manual verification (user, F5)
+Phase 1.2 water: translucent water fills low areas, hills rise above it, no flicker, z-fighting or black patches, camera controls and console clean. Verified manually on 2026-10-13. Result: pass.
