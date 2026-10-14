@@ -620,3 +620,7 @@ Independence can be achieved through:
 - or sufficient economic size.
 
 Victory does not end gameplay.
+
+## Pinned ideas (not committed to)
+
+- Player-adjustable terrain roughness at world creation (smoother terrain vs. more noise). This would be exposed through terrain generation settings (octaves, persistence, feature size). Those settings would then have to be saved with the world, because they change what a given seed generates.
