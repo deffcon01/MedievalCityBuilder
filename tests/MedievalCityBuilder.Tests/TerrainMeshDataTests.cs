@@ -317,5 +317,151 @@ namespace MedievalCityBuilder.Tests
             Assert.Equal(256, mesh.VertexCount);
             Assert.Equal(450, mesh.TriangleCount); // (16-1)*(16-1)*2 = 15*15*2 = 450
         }
+
+        [Fact]
+        public void XRamp_NormalsAreConstantWithExpectedValues()
+        {
+            var hm = new Heightmap(5, 5);
+            for (int z = 0; z < 5; z++)
+            {
+                for (int x = 0; x < 5; x++)
+                {
+                    hm.Set(x, z, (float)(0.1 * x));
+                }
+            }
+            var mesh = TerrainMeshData.Build(hm, 2.0, 10.0);
+            float expectedNx = -0.4472136f;
+            float expectedNy = 0.8944272f;
+            float expectedNz = 0f;
+            for (int vi = 0; vi < mesh.VertexCount; vi++)
+            {
+                int ni = vi * 3;
+                Assert.Equal(expectedNx, mesh.Normals[ni], 1e-6);
+                Assert.Equal(expectedNy, mesh.Normals[ni + 1], 1e-6);
+                Assert.Equal(expectedNz, mesh.Normals[ni + 2], 1e-6);
+            }
+        }
+
+        [Fact]
+        public void ZRamp_NormalsAreConstantWithExpectedValues()
+        {
+            var hm = new Heightmap(5, 5);
+            for (int z = 0; z < 5; z++)
+            {
+                for (int x = 0; x < 5; x++)
+                {
+                    hm.Set(x, z, (float)(0.1 * z));
+                }
+            }
+            var mesh = TerrainMeshData.Build(hm, 1.0, 5.0);
+            float expectedNx = 0f;
+            float expectedNy = 0.8944272f;
+            float expectedNz = -0.4472136f;
+            for (int vi = 0; vi < mesh.VertexCount; vi++)
+            {
+                int ni = vi * 3;
+                Assert.Equal(expectedNx, mesh.Normals[ni], 1e-6);
+                Assert.Equal(expectedNy, mesh.Normals[ni + 1], 1e-6);
+                Assert.Equal(expectedNz, mesh.Normals[ni + 2], 1e-6);
+            }
+        }
+
+        [Fact]
+        public void XRamp_HeightScaleZero_GivesUpNormals()
+        {
+            var hm = new Heightmap(5, 5);
+            for (int z = 0; z < 5; z++)
+            {
+                for (int x = 0; x < 5; x++)
+                {
+                    hm.Set(x, z, (float)(0.1 * x));
+                }
+            }
+            var mesh = TerrainMeshData.Build(hm, 2.0, 0.0);
+            for (int vi = 0; vi < mesh.VertexCount; vi++)
+            {
+                int ni = vi * 3;
+                Assert.Equal(0.0f, mesh.Normals[ni], 1e-6);
+                Assert.Equal(1.0f, mesh.Normals[ni + 1], 1e-6);
+                Assert.Equal(0.0f, mesh.Normals[ni + 2], 1e-6);
+            }
+        }
+
+        [Fact]
+        public void XRamp_NormalScalingRatioMatchesHeightScale()
+        {
+            var hm = new Heightmap(5, 5);
+            for (int z = 0; z < 5; z++)
+            {
+                for (int x = 0; x < 5; x++)
+                {
+                    hm.Set(x, z, (float)(0.1 * x));
+                }
+            }
+            var mesh10 = TerrainMeshData.Build(hm, 2.0, 10.0);
+            var mesh20 = TerrainMeshData.Build(hm, 2.0, 20.0);
+            for (int vi = 0; vi < mesh10.VertexCount; vi++)
+            {
+                int ni = vi * 3;
+                float nx10 = mesh10.Normals[ni];
+                float ny10 = mesh10.Normals[ni + 1];
+                float ratio10 = nx10 / ny10;
+                Assert.Equal(-0.5f, ratio10, 1e-6);
+                float nx20 = mesh20.Normals[ni];
+                float ny20 = mesh20.Normals[ni + 1];
+                float ratio20 = nx20 / ny20;
+                Assert.Equal(-1.0f, ratio20, 1e-6);
+            }
+        }
+
+        [Fact]
+        public void XRamp_GeometricNormalAgreesWithVertexNormal()
+        {
+            var hm = new Heightmap(5, 5);
+            for (int z = 0; z < 5; z++)
+            {
+                for (int x = 0; x < 5; x++)
+                {
+                    hm.Set(x, z, (float)(0.1 * x));
+                }
+            }
+            var mesh = TerrainMeshData.Build(hm, 2.0, 10.0);
+            int width = 5;
+            int xCell = 1;
+            int zCell = 1;
+            int v00 = zCell * width + xCell;
+            int v10 = zCell * width + xCell + 1;
+            int v01 = (zCell + 1) * width + xCell;
+            int vVert = 2 * width + 2;
+            float ax = mesh.Positions[v00 * 3];
+            float ay = mesh.Positions[v00 * 3 + 1];
+            float az = mesh.Positions[v00 * 3 + 2];
+            float bx = mesh.Positions[v10 * 3];
+            float by = mesh.Positions[v10 * 3 + 1];
+            float bz = mesh.Positions[v10 * 3 + 2];
+            float cx = mesh.Positions[v01 * 3];
+            float cy = mesh.Positions[v01 * 3 + 1];
+            float cz = mesh.Positions[v01 * 3 + 2];
+            float bax = bx - ax;
+            float bay = by - ay;
+            float baz = bz - az;
+            float cax = cx - ax;
+            float cay = cy - ay;
+            float caz = cz - az;
+            float cxr = bay * caz - baz * cay;
+            float cyr = baz * cax - bax * caz;
+            float czr = bax * cay - bay * cax;
+            float len = (float)Math.Sqrt(cxr * cxr + cyr * cyr + czr * czr);
+            float nxGeo = -cxr / len;
+            float nyGeo = -cyr / len;
+            float nzGeo = -czr / len;
+            int ni = vVert * 3;
+            float nxV = mesh.Normals[ni];
+            float nyV = mesh.Normals[ni + 1];
+            float nzV = mesh.Normals[ni + 2];
+            Assert.Equal(nxGeo, nxV, 1e-5);
+            Assert.Equal(nyGeo, nyV, 1e-5);
+            Assert.Equal(nzGeo, nzV, 1e-5);
+        }
     }
 }
