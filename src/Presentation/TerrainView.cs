@@ -16,6 +16,7 @@ public partial class TerrainView : Node3D
     [Export] public WorldSize WorldSize = WorldSize.Small; // PLACEHOLDER
     [Export] public double CellSize = 1.0;          // PLACEHOLDER
     [Export] public double HeightScale = 10.0;      // PLACEHOLDER
+    [Export] public double SeaLevel = 0.35;         // PLACEHOLDER: pending visual tuning
 
     private MeshInstance3D? _meshInstance;
     private ArrayMesh? _arrayMesh;
@@ -25,6 +26,11 @@ public partial class TerrainView : Node3D
     /// World extents in XZ after centering. Returns (minX, maxX, minZ, maxZ).
     /// </summary>
     public (float minX, float maxX, float minZ, float maxZ) WorldExtentsXZ { get; private set; }
+
+    /// <summary>
+    /// Exposed HeightScale for other nodes (e.g., CameraRig) to read.
+    /// </summary>
+    public double HeightScaleValue => HeightScale;
 
     public override void _Ready()
     {
@@ -96,6 +102,42 @@ public partial class TerrainView : Node3D
         // Compute world extents after centering
         WorldExtentsXZ = (-extentX * 0.5f, extentX * 0.5f, -extentZ * 0.5f, extentZ * 0.5f);
 
+        // Create water plane
+        var waterSettings = new WaterSettings(SeaLevel);
+        var waterPlaneMesh = new PlaneMesh
+        {
+            Size = new Vector2(extentX, extentZ),
+            SubdivideWidth = 1,
+            SubdivideDepth = 1,
+        };
+        var waterMeshInstance = new MeshInstance3D
+        {
+            Mesh = waterPlaneMesh,
+            Name = "WaterPlane"
+        };
+        // Local position: center of the plane in XZ, Y at SeaLevel * HeightScale
+        // The plane is centered at its local origin, so position at (extentX/2, y, extentZ/2) relative to the uncentered terrain
+        // But the terrain is now centered at Position = (-extentX/2, 0, -extentZ/2), so we need to place water at
+        // local position (extentX/2, SeaLevel * HeightScale, extentZ/2) relative to TerrainView
+        waterMeshInstance.Position = new Vector3(extentX * 0.5f, (float)(SeaLevel * HeightScale), extentZ * 0.5f);
+
+        var waterMaterial = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(0.1f, 0.3f, 0.7f, 0.6f),
+            Roughness = 0.2f,
+            Transparency = StandardMaterial3D.TransparencyEnum.Alpha,
+            ShadingMode = StandardMaterial3D.ShadingModeEnum.PerPixel,
+            CullMode = StandardMaterial3D.CullModeEnum.Back,
+            RenderPriority = 1, // Render after opaque terrain
+        };
+        waterMeshInstance.SetSurfaceOverrideMaterial(0, waterMaterial);
+        waterMeshInstance.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off; // No shadows
+
+        AddChild(waterMeshInstance);
+
+        // Log terrain and water info
+        double underwaterFraction = WaterAnalysis.UnderwaterFraction(heightmap, waterSettings);
         GD.Print($"TerrainView: seed={Seed}, size={WorldSize}, vertices={vertexCount}, extents=({WorldExtentsXZ.minX}, {WorldExtentsXZ.maxX}, {WorldExtentsXZ.minZ}, {WorldExtentsXZ.maxZ})");
+        GD.Print($"WaterPlane: SeaLevel={SeaLevel}, underwaterFraction={underwaterFraction:F4}");
     }
 }

@@ -23,7 +23,7 @@
 ### 1.2 Basic world
 - [x] Bounded test terrain.
 - [x] Terrain representation.
-- [ ] Water representation.
+- [x] Water representation.
 - [x] Basic world seed.
 - [ ] Save/load seed.
 

@@ -608,3 +608,69 @@ b4259d1 P1-2c-fix.1: fix terrain normal slope scaling
 - **Verified**: All three verification commands pass.
 - **Blocked**: None.
 - **Next**: Phase 1.2 — Water representation or other Basic world items.
+
+---
+
+## Phase 1-2d — Water Level (Sea-Level Plane)
+
+### 2026-10-13 - Implemented water level (sea-level plane)
+- **What changed**:
+  1. Created `src/World/WaterSettings.cs`: Immutable record with SeaLevel (double, normalized height in [0,1]). Constructor validates: throws ArgumentOutOfRangeException if NaN, < 0 or > 1. Static Default with SeaLevel = 0.35 and comment that it is a PLACEHOLDER pending visual tuning and that rivers/lakes/groundwater are deferred to Phase 5.
+  2. Created `src/World/WaterAnalysis.cs`: Static pure functions. IsUnderwater(Heightmap, x, z, WaterSettings) returns strictly less than sea level (equal is NOT underwater). CountUnderwaterVertices returns int. UnderwaterFraction returns double in [0,1]. All throw ArgumentNullException for null arguments.
+  3. Created `tests/MedievalCityBuilder.Tests/WaterTests.cs`: 20 tests covering WaterSettings validation (NaN, -0.01, 1.01 throw; 0 and 1 accepted; equality; Default.SeaLevel=0.35), hand-built 4x4 heightmap with SeaLevel 0.5 (exact underwater count=6, fraction=0.375; vertex exactly at sea level NOT underwater), SeaLevel 0 (zero underwater), SeaLevel 1 on map all below 1 (15/16 underwater, value 1.0 is NOT underwater), fraction = count/(width*height), null arguments throw, generated heightmap (seed 12345, GeneratorVersion 1, TerrainSettings.Default, 64x64) fraction in [0,1] and deterministic.
+  4. Updated `src/Presentation/TerrainView.cs`: Added [Export] public double SeaLevel = 0.35 (PLACEHOLDER). In _Ready, builds WaterSettings from it, creates PlaneMesh of size (extentX, extentZ) as second MeshInstance3D child at LOCAL position (extentX/2, SeaLevel*HeightScale, extentZ/2). Material: StandardMaterial3D, alpha transparency, albedo (0.1, 0.3, 0.7, 0.6), roughness 0.2, no shadows. Node name: WaterPlane. Logs extra line with SeaLevel and underwater fraction (using WaterAnalysis.UnderwaterFraction). Added public property HeightScaleValue to expose HeightScale.
+  5. Updated `src/Presentation/Main.cs`: Replaced hard-coded 10.0 * 0.5 with terrainView.HeightScaleValue * 0.5.
+  6. Updated TODO.md: Checked off "Water representation" in section 1.2.
+
+- **Commands**: 2 commits on `phase1-2d-water`
+- **Verification Results**:
+  - `./tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:    98, Skipped:     0, Total:    98, Duration: 58 ms
+    ```
+    (Total test suite: 20 new + 78 previous = 98 tests)
+  - `./tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. No unresolved warnings.
+  - **Underwater fraction for seed 12345**: 0.0772 (7.72%) — within acceptable range (not 0% or >80%), no flag needed.
+
+- **Manual Checklist (unverified manually)**:
+  - [ ] Blue translucent water fills low areas
+  - [ ] Hills and ridges rise above it
+  - [ ] No flicker, z-fighting or black patches
+  - [ ] Camera pan, rotate and zoom still work
+  - [ ] No console warnings
+
+### Git Log (phase1-2d-water)
+```
+f13ca99 P1-2d.4,5: Add SeaLevel export, WaterPlane mesh, HeightScaleValue property, update Main.cs to use it
+4c63fcf P1-2d.1: Add WaterSettings record and WaterAnalysis static functions with tests
+a964335 Merge phase1-2c-terrain-mesh: terrain mesh from seeded heightmap
+23bd5d7 docs: pin idea for player-adjustable terrain roughness
+71d1040 P1-2c-tests: update PROGRESS.md with verification results
+...
+```
+
+### Final Status (Phase 1-2d)
+- **Done**: All 6 scope items implemented and verified.
+- **Verified**: Build succeeds; 98 tests pass (20 new + 78 previous); headless run clean with both TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.3 — Roads or other Basic world items.
+## Manual verification (user, F5)
+Phase 1.2 water: translucent water fills low areas, hills rise above it, no flicker, z-fighting or black patches, camera controls and console clean. Verified manually on 2026-10-13. Result: pass.
