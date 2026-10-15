@@ -803,7 +803,114 @@ c3a19a4 Merge phase1-2d-water: sea-level water plane
 
 ---
 
-## P1-2f-testfix — Fix Failing Test and Warnings
+## Phase 1-3a — RoadGraph: Fix Warnings and Add Adjacency Index
+
+### 2026-10-15 - Fix CS8601 warnings and add adjacency index to RoadGraph
+
+- **What changed**:
+  1. Added `using System.Diagnostics.CodeAnalysis;` and `[MaybeNullWhen(false)]` attributes to `TryGetNode` and `TryGetSegment` out parameters in `src/Roads/RoadGraph.cs` to fix CS8601 warnings.
+  2. Added private adjacency index `Dictionary<int, SortedSet<int>> _segmentsByNode` mapping each node ID to sorted segment IDs.
+  3. Updated `AddNode` to create empty SortedSet for each new node.
+  4. Updated `AddSegment` to add segment ID to both end nodes' sets.
+  5. Updated `RemoveSegment` to remove segment ID from both end nodes' sets.
+  6. Updated `RemoveNode` to check adjacency index instead of scanning all segments; throws InvalidOperationException if set is non-empty.
+  7. Rewrote `GetSegmentsAt` to return segments in ascending ID order from the adjacency set.
+  8. Rewrote `GetNeighbors` to return neighbors in ascending node ID order from incident segments.
+  9. Rewrote `AreConnected` to use BFS over adjacency index instead of scanning all segments.
+  10. Rewrote `CountConnectedComponents` to use BFS over adjacency index instead of scanning all segments.
+  11. Added 5 new tests to `tests/MedievalCityBuilder.Tests/RoadGraphTests.cs`:
+      - `Adjacency_StarGraph_ScrambledOrder`: 1000 spokes, verifies neighbors and segments ordered correctly, each spoke has exactly one neighbor.
+      - `Adjacency_RemoveSegment_UpdatesNeighborsAndSegmentsAt`: verifies removal updates neighbors and segments at both ends, AreConnected becomes false.
+      - `Adjacency_RemoveNode_HubWithSpokes`: verifies RemoveNode throws while segments exist, succeeds after removal, CountConnectedComponents equals 1000.
+      - `Adjacency_Chain20000_Connected`: 20000-node chain, AreConnected true, CountConnectedComponents 1, after removing middle segment AreConnected false and CountConnectedComponents 2.
+      - `Adjacency_CyclePlusPair_Components`: triangle plus separate pair, CountConnectedComponents is 2, AreConnected inside triangle true.
+
+- **Commands**: 3 commits on `phase1-3a-road-graph`
+- **Verification Results**:
+  - `tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:   188, Skipped:     0, Total:   188, Duration: X ms
+    ```
+    (Total test suite: 5 new + 183 existing = 188 tests; no warnings from src/Roads)
+  - `tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Keys: F6 save, F7 load, N new random world
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. TerrainView and WaterPlane log lines unchanged. Main scene loaded and Keys hint lines present.
+  - **Notes**: Public API, exceptions, messages, ordering and results remain exactly the same. No new packages. No Godot types, no System.Random, GetHashCode, DateTime or Guid in src/Roads.
+
+### Git Log (phase1-3a-road-graph)
+```
+8c2ec62 Add adjacency index tests for star graph, segment removal, node removal, chain and cycle components
+ef435c8 Add adjacency index _segmentsByNode and rewrite GetSegmentsAt, GetNeighbors, RemoveNode, AreConnected, CountConnectedComponents to use it
+e70c8c8 Fix CS8601 warnings: add [MaybeNullWhen(false)] to TryGetNode and TryGetSegment out parameters
+```
+
+### Final Status (Phase 1-3a)
+- **Done**: All 4 scope items implemented and verified:
+  1. CS8601 warnings fixed with [MaybeNullWhen(false)] attributes
+  2. Adjacency index added and all methods rewritten to use it
+  3. 5 new tests added covering star graph, removal, chain, cycle
+  4. Build, tests, and headless run verified
+- **Verified**: Build succeeds; 188 tests pass; headless run clean with required log lines, zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.3b — RoadGraph persistence or other Basic world items.
+
+---
+
+## Final Report (2026-10-15) — Phase 1-3a
+
+### Done
+1. Fixed CS8601 warnings by adding `using System.Diagnostics.CodeAnalysis;` and `[MaybeNullWhen(false)]` attributes to `TryGetNode` and `TryGetSegment` out parameters in `src/Roads/RoadGraph.cs`.
+2. Added private adjacency index `Dictionary<int, SortedSet<int>> _segmentsByNode` to map node IDs to incident segment IDs.
+3. Updated `AddNode` to create empty SortedSet for new nodes.
+4. Updated `AddSegment` to add segment ID to both end nodes' adjacency sets.
+5. Updated `RemoveSegment` to remove segment ID from both end nodes' adjacency sets.
+6. Updated `RemoveNode` to check adjacency set instead of scanning all segments.
+7. Rewrote `GetSegmentsAt` to use adjacency set for O(degree) instead of O(segments).
+8. Rewrote `GetNeighbors` to use Set for O(degree) instead of O(segments).
+9. Rewrote `AreConnected` to use BFS over adjacency index instead of scanning all segments each iteration.
+10. Rewrote `CountConnectedComponents` to use BFS over adjacency index instead of scanning all segments each iteration.
+11. Added 5 new tests to `tests/MedievalCityBuilder.Tests/RoadGraphTests.cs` covering star graph, segment removal, node removal, 20000-node chain, and cycle plus pair components.
+12. Verified `tools/build.ps1` → Build succeeded!
+13. Verified `dotnet test tests/MedievalCityBuilder.Tests` → 188 tests passed, 0 failed.
+14. Verified `tools/run-headless.ps1` → All required log lines present, no WARNING or ERROR lines.
+
+### Verified
+- `tools/build.ps1` builds successfully with zero errors and zero warnings from src/Roads.
+- `dotnet test tests/MedievalCityBuilder.Tests` runs 188 tests, all pass.
+- `tools/run-headless.ps1` loads scene, prints TerrainView and WaterPlane log lines unchanged, prints "Main scene loaded" and Keys hint lines, exits cleanly with exit code 0, no WARNING/ERROR lines.
+- Public API preserved: exceptions, messages, ordering, and results identical to original.
+- No new packages added. No Godot types, no System.Random, GetHashCode, DateTime or Guid in src/Roads.
+- Rules followed: Did not touch GOAL.md, DESIGN.md, ARCHITECTURE.md, src/Core, src/World, src/Persistence, src/Presentation, RoadIds.cs or existing tests.
+
+### Blocked
+- None
+
+### Next
+- Phase 1.3b — RoadGraph persistence or other Basic world items.
+
+### Git Log (phase1-3a-road-graph)
+```
+8c2ec62 Add adjacency index tests for star graph, segment removal, node removal, chain and cycle components
+ef435c8 Add adjacency index _segmentsByNode and rewrite GetSegmentsAt, GetNeighbors, RemoveNode, AreConnected, CountConnectedComponents to use it
+e70c8c8 Fix CS8601 warnings: add [MaybeNullWhen(false)] to TryGetNode and TryGetSegment out parameters
+```
 
 ### 2026-10-14 - Fixed test and warnings in WorldSaveFile
 - **What changed**:
