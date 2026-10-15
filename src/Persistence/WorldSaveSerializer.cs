@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text.Json;
 using MedievalCityBuilder.World;
 
@@ -35,7 +36,7 @@ namespace MedievalCityBuilder.Persistence
             {
                 FormatVersion = SaveFormat.CurrentFormatVersion,
                 GeneratorVersion = data.Generation.GeneratorVersion,
-                Seed = data.Generation.Seed.ToString(),
+                Seed = data.Generation.Seed.ToString(CultureInfo.InvariantCulture),
                 WorldSize = data.Generation.Size.ToString(),
                 Terrain = new TerrainDto
                 {
@@ -80,7 +81,7 @@ namespace MedievalCityBuilder.Persistence
                 throw new SaveFormatException("JSON root must be an object.");
             }
 
-            int formatVersion = dto.FormatVersion;
+            int formatVersion = dto.FormatVersion ?? throw new SaveFormatException("formatVersion is missing.");
             if (formatVersion < 1)
             {
                 throw new SaveFormatException("formatVersion must be >= 1; got " + formatVersion + ".");
@@ -91,7 +92,7 @@ namespace MedievalCityBuilder.Persistence
                 throw new SaveFormatException("save is from a newer version of the game");
             }
 
-            int generatorVersion = dto.GeneratorVersion;
+            int generatorVersion = dto.GeneratorVersion ?? throw new SaveFormatException("generatorVersion is missing.");
             if (generatorVersion > WorldGenerationSettings.CurrentGeneratorVersion)
             {
                 throw new SaveFormatException("cannot reproduce this world with this build");
@@ -100,7 +101,7 @@ namespace MedievalCityBuilder.Persistence
             // Older generator versions are accepted for now because only version 1 exists.
             // Once the terrain generator changes, add a compatibility/migration path here.
             string? seedText = dto.Seed;
-            if (seedText == null || !ulong.TryParse(seedText, out ulong seed))
+            if (seedText == null || !ulong.TryParse(seedText, NumberStyles.None, CultureInfo.InvariantCulture, out ulong seed))
             {
                 throw new SaveFormatException("seed is not a valid decimal ulong: '" + seedText + "'.");
             }
@@ -119,21 +120,28 @@ namespace MedievalCityBuilder.Persistence
                 throw new SaveFormatException("Missing or invalid required object field 'terrain'.");
             }
 
+            int octaves = terrainDto.Octaves ?? throw new SaveFormatException("octaves is missing.");
+            double baseFeatureSizeCells = terrainDto.BaseFeatureSizeCells ?? throw new SaveFormatException("baseFeatureSizeCells is missing.");
+            double persistence = terrainDto.Persistence ?? throw new SaveFormatException("persistence is missing.");
+            double lacunarity = terrainDto.Lacunarity ?? throw new SaveFormatException("lacunarity is missing.");
+
             WaterDto? waterDto = dto.Water;
             if (waterDto == null)
             {
                 throw new SaveFormatException("Missing or invalid required object field 'water'.");
             }
 
+            double seaLevel = waterDto.SeaLevel ?? throw new SaveFormatException("seaLevel is missing.");
+
             try
             {
                 var generation = new WorldGenerationSettings(seed, generatorVersion, size);
                 var terrain = new TerrainSettings(
-                    terrainDto.Octaves,
-                    terrainDto.BaseFeatureSizeCells,
-                    terrainDto.Persistence,
-                    terrainDto.Lacunarity);
-                var water = new WaterSettings(waterDto.SeaLevel);
+                    octaves,
+                    baseFeatureSizeCells,
+                    persistence,
+                    lacunarity);
+                var water = new WaterSettings(seaLevel);
                 return new WorldSaveData(generation, terrain, water);
             }
             catch (ArgumentException ex)
@@ -145,8 +153,8 @@ namespace MedievalCityBuilder.Persistence
         /// <summary>DTO defining the save layout. Property order is the JSON field order.</summary>
         private sealed class SaveDto
         {
-            public int FormatVersion { get; set; }
-            public int GeneratorVersion { get; set; }
+            public int? FormatVersion { get; set; }
+            public int? GeneratorVersion { get; set; }
             public string? Seed { get; set; }
             public string? WorldSize { get; set; }
             public TerrainDto? Terrain { get; set; }
@@ -156,16 +164,16 @@ namespace MedievalCityBuilder.Persistence
         /// <summary>DTO for the terrain block. Property order is the JSON field order.</summary>
         private sealed class TerrainDto
         {
-            public int Octaves { get; set; }
-            public double BaseFeatureSizeCells { get; set; }
-            public double Persistence { get; set; }
-            public double Lacunarity { get; set; }
+            public int? Octaves { get; set; }
+            public double? BaseFeatureSizeCells { get; set; }
+            public double? Persistence { get; set; }
+            public double? Lacunarity { get; set; }
         }
 
         /// <summary>DTO for the water block. Property order is the JSON field order.</summary>
         private sealed class WaterDto
         {
-            public double SeaLevel { get; set; }
+            public double? SeaLevel { get; set; }
         }
     }
 }
