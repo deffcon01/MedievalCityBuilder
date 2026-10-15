@@ -674,3 +674,129 @@ a964335 Merge phase1-2c-terrain-mesh: terrain mesh from seeded heightmap
 - **Next**: Phase 1.3 — Roads or other Basic world items.
 ## Manual verification (user, F5)
 Phase 1.2 water: translucent water fills low areas, hills rise above it, no flicker, z-fighting or black patches, camera controls and console clean. Verified manually on 2026-10-13. Result: pass.
+
+---
+
+## Phase 1-2e — Save Format (In-Memory JSON)
+
+### 2026-10-14 - Implemented WorldSaveSerializer and tests
+- **What changed**:
+  1. Created `src/Persistence/WorldSaveSerializer.cs`: static class with `Serialize(WorldSaveData)` and `Deserialize(string)` methods. Uses private DTO classes (`SaveDto`, `TerrainDto`, `WaterDto`) so domain records don't leak into wire format. Property order in JSON: `formatVersion`, `generatorVersion`, `seed` (decimal string of ulong), `worldSize` (enum name), `terrain` { `octaves`, `baseFeatureSizeCells`, `persistence`, `lacunarity` }, `water` { `seaLevel` }. `JsonSerializerOptions` explicitly set: `WriteIndented = true`, `PropertyNamingPolicy = JsonNamingPolicy.CamelCase`, `Culture = CultureInfo.InvariantCulture` (removed as unsupported; relies on default invariant behavior).
+  2. `Deserialize` throws `SaveFormatException` with clear message for: null/empty/whitespace input; malformed JSON; wrong JSON shape; missing required fields; `formatVersion < 1` or `> CurrentFormatVersion` ("save is from a newer version of the game"); `generatorVersion > CurrentGeneratorVersion` ("cannot reproduce this world with this build"); lower generator versions accepted with comment about future compatibility path; invalid seed (non-decimal ulong); invalid worldSize (not a defined enum name, numeric strings rejected); domain constructor rejections (wrapped as `SaveFormatException` with original `ArgumentException` as `InnerException`). Unknown extra JSON fields are ignored.
+  3. Created `tests/MedievalCityBuilder.Tests/WorldSaveSerializerTests.cs`: 20 tests covering:
+     - Round-trip equality for (a) seed 12345 with defaults, (b) `ulong.MaxValue`, (c) seed 0, (d) non-default TerrainSettings and WaterSettings with awkward doubles (0.1, 1.0/3.0, 1e-9)
+     - Determinism: two serializations give identical strings
+     - Output contains "formatVersion", quoted seed string, world size name (string contains, not exact golden string)
+     - REPRODUCIBILITY: heightmap from `TerrainGenerator.Generate` with seed 12345, TerrainSettings.Default, 64x64; serialize/deserialize; regenerate; every height exactly equal
+     - Every Deserialize failure case throws `SaveFormatException`: formatVersion 0, 999; generatorVersion 99; seed "abc", "-1"; worldSize "Huge", "1"; seaLevel 2.0; octaves 0; empty string, null, "{}", "not json"
+     - Unknown extra field is ignored and data loads
+- **Commands**: 1 commit (a8f4b5c)
+- **Verification Results**:
+  - `./tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:   120, Skipped:     0, Total:   120, Duration: 67 ms
+    ```
+    (Total test suite: 20 new + 100 previous = 120 tests)
+  - `./tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. No unresolved warnings.
+  - **Notes**: This task covers the in-memory save format only. Saved terrain edits, buildings and simulation state will extend WorldSaveData later and require format version increments. Do not check off "Save/load seed" in TODO.md yet.
+
+### Git Log (phase1-2e-save-format)
+```
+a8f4b5c P1-2e.4-5: WorldSaveSerializer and tests
+76f8c59 P1-2e.2-3: SaveFormatException and WorldSaveData; add missing using System
+bb5aed2 P1-2e.1: compile src/Persistence/**/*.cs into test project
+c3a19a4 Merge phase1-2d-water: sea-level water plane
+...
+```
+
+### Final Status (Phase 1-2e)
+- **Done**: All scope items (items 4, 5, 6) implemented and verified.
+- **Verified**: Build succeeds; 120 tests pass (20 new + 100 previous); headless run clean with TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.3 — Roads or other Basic world items.
+- **Reminder**: "Save/load seed" in TODO.md is NOT checked off yet (file I/O not implemented).
+
+---
+
+## P1-2e-fix — Harden WorldSaveSerializer
+
+### 2026-10-14 - Hardened WorldSaveSerializer field deserialization and culture handling
+- **What changed**:
+  1. Updated `src/Persistence/WorldSaveSerializer.cs`:
+     - Added `using System.Globalization;`
+     - Made all DTO numeric fields nullable: `FormatVersion`, `GeneratorVersion` in `SaveDto`; `Octaves`, `BaseFeatureSizeCells`, `Persistence`, `Lacunarity` in `TerrainDto`; `SeaLevel` in `WaterDto`
+     - In `Deserialize`: check formatVersion first, then generatorVersion, then seed, then worldSize, then terrain fields in order (octaves, baseFeatureSizeCells, persistence, lacunarity), then water field (seaLevel). Each missing field throws `SaveFormatException` with message naming that field.
+     - Seed parsing: `ulong.TryParse(seedText, NumberStyles.None, CultureInfo.InvariantCulture, out seed)` — rejects whitespace, "+" sign, and uses invariant culture.
+     - Seed serialization: `Seed.ToString(CultureInfo.InvariantCulture)`.
+     - Property order and JSON field names unchanged.
+  2. Added tests to `tests/MedievalCityBuilder.Tests/WorldSaveSerializerTests.cs` (18 new tests, existing tests unchanged):
+     - `Deserialize_MissingField_ThrowsSaveFormatExceptionWithFieldName`: 11 cases covering missing formatVersion, generatorVersion, seed, worldSize, terrain, octaves, baseFeatureSizeCells, persistence, lacunarity, water, seaLevel. Each throws SaveFormatException with the field name in the message.
+     - `Deserialize_InvalidSeed_ThrowsSaveFormatException`: 5 cases — seeds " 5", "5 ", "+5", "", "18446744073709551616" (ulong.MaxValue+1) all throw.
+     - `Deserialize_SeedUlongMaxValue_LoadsSuccessfully`: "18446744073709551615" loads as ulong.MaxValue.
+     - `Deserialize_WorldSizeSmallLowercase_ThrowsSaveFormatException`: worldSize "small" (lowercase) throws.
+     - `CultureTest_RoundTripWithAwkwardDoubles`: Inside try/finally, sets CultureInfo.CurrentCulture to "de-DE", does round-trip with doubles 0.1 and 1.0/3.0, asserts record equality and that JSON text contains "0.1" and not "0,1". Restores original culture in finally.
+- **Commands**: 2 commits on `phase1-2e-save-format`
+- **Verification Results**:
+  - `./tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:   138, Skipped:     0, Total:   138, Duration: 68 ms
+    ```
+    (Total test suite: 18 new + 120 previous = 138 tests)
+  - `./tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. The two required TerrainView and WaterPlane log lines are present.
+  - **Notes**: Two problems fixed that earlier tests missed:
+    1. Required numeric fields defaulted silently to 0 (valid for SeaLevel 0.0), so corrupt saves with missing "water.seaLevel" (or "water": {}) loaded without error. Now all seven numeric fields are checked for null and throw with field name.
+    2. Seed parsing used culture-dependent `ulong.TryParse` accepting whitespace and "+" sign; now uses `NumberStyles.None` with `CultureInfo.InvariantCulture` for strict parsing. Serialization also uses invariant culture.
+
+### Git Log (phase1-2e-save-format)
+```
+01f9c26 P2: add tests for missing fields, seed parsing, worldSize, and culture independence
+f7ec63f P1: harden WorldSaveSerializer field deserialization and culture handling
+a4fe55e Track Godot .uid files for persistence code
+020eff2 P1-2e.4-5: WorldSaveSerializer and tests
+76f8c59 P1-2e.2-3: SaveFormatException and WorldSaveData; add missing using System
+bb5aed2 P1-2e.1: compile src/Persistence/**/*.cs into test project
+c3a19a4 Merge phase1-2d-water: sea-level water plane
+6593475 docs: record manual verification of Phase 1.2 water
+```
+
+### Final Status (P1-2e-fix)
+- **Done**: Both numbered items implemented and verified.
+- **Verified**: Build succeeds; 138 tests pass (18 new + 120 previous); headless run clean with both TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.3 — Roads or other Basic world items.
