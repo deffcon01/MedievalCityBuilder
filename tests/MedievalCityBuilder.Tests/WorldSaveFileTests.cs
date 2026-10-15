@@ -158,7 +158,12 @@ namespace MedievalCityBuilder.Tests
             );
 
             // This should throw because we can't write to the .tmp (it's a directory)
-            Assert.Throws<IOException>(() => WorldSaveFile.Save(path, newData));
+            // Windows throws UnauthorizedAccessException when a file is opened on a directory path
+            var ex = Assert.ThrowsAny<Exception>(() => WorldSaveFile.Save(path, newData));
+            Assert.True(ex is IOException || ex is UnauthorizedAccessException,
+                "Expected IOException or UnauthorizedAccessException, got " + ex.GetType().Name);
+            Assert.False(ex is SaveFormatException || ex is ArgumentException,
+                "Should not throw SaveFormatException or ArgumentException");
 
             // Original file should still exist and be loadable with original data
             Assert.True(File.Exists(path), "Original file should still exist");
