@@ -800,3 +800,55 @@ c3a19a4 Merge phase1-2d-water: sea-level water plane
 - **Verified**: Build succeeds; 138 tests pass (18 new + 120 previous); headless run clean with both TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
 - **Blocked**: None.
 - **Next**: Phase 1.3 — Roads or other Basic world items.
+
+---
+
+## P1-2f-testfix — Fix Failing Test and Warnings
+
+### 2026-10-14 - Fixed test and warnings in WorldSaveFile
+- **What changed**:
+  1. **Item 1** (`tests/MedievalCityBuilder.Tests/WorldSaveFileTests.cs`): Updated `Save_FailedSave_PreservesOriginalFile` to use `Assert.ThrowsAny<Exception>` and assert the exception is `IOException` or `UnauthorizedAccessException` (not `SaveFormatException` or `ArgumentException`). Added comment: "Windows throws UnauthorizedAccessException when a file is opened on a directory path".
+  2. **Item 2** (`src/Persistence/WorldSaveFile.cs`): Wrapped the cleanup `File.Delete(tempPath)` in the `finally` block with `try/catch` that ignores `IOException` and `UnauthorizedAccessException`. This ensures the original exception propagates and cleanup never deletes a directory.
+  3. **Item 3** (`tests/MedievalCityBuilder.Tests/WorldSaveFileTests.cs`): Fixed two CS8604 warnings by using null-forgiving operator (`badPath!`) where tests intentionally pass null paths in `Save_NullEmptyWhitespacePath_ThrowsArgumentException` and `Load_NullEmptyWhitespacePath_ThrowsArgumentException`.
+- **Commands**: 3 commits on `phase1-2f-save-file`
+- **Verification Results**:
+  - `tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:   157, Skipped:     0, Total:   157, Duration: 55 ms
+    ```
+    (Total test suite: 157 tests, all passing, **no warnings** from these test files)
+  - `tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. The two required TerrainView and WaterPlane log lines are present.
+
+### Git Log (phase1-2f-save-file)
+```
+6938cc5 Item 3: Fix CS8604 warnings with null-forgiving operator for intentional null path tests
+c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and UnauthorizedAccessException
+47a83d4 Item 1: Fix Save_FailedSave_PreservesOriginalFile to accept IOException or UnauthorizedAccessException
+d69c437 P1-2f: Add WorldSaveFile tests with round-trip, BOM, failed-save-preservation
+66f6980 P1-2f: Implement WorldSaveFile.Save/Load
+b0dec52 Merge phase1-2e-save-format: world save format and JSON serializer
+```
+
+### Final Status (P1-2f-testfix)
+- **Done**: All 3 items implemented and verified.
+- **Verified**: Build succeeds; 157 tests pass (19 new from P1-2f + 138 previous); headless run clean with TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.3 — Roads or other Basic world items.
