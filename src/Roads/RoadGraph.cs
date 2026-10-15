@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace MedievalCityBuilder.Roads
@@ -100,7 +101,7 @@ namespace MedievalCityBuilder.Roads
             return node;
         }
 
-        public bool TryGetNode(RoadNodeId id, out RoadNode node)
+        public bool TryGetNode(RoadNodeId id, [MaybeNullWhen(false)] out RoadNode node)
         {
             return _nodes.TryGetValue(id.Value, out node);
         }
@@ -112,7 +113,7 @@ namespace MedievalCityBuilder.Roads
             return seg;
         }
 
-        public bool TryGetSegment(RoadSegmentId id, out RoadSegment segment)
+        public bool TryGetSegment(RoadSegmentId id, [MaybeNullWhen(false)] out RoadSegment segment)
         {
             return _segments.TryGetValue(id.Value, out segment);
         }
