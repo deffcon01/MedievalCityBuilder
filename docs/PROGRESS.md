@@ -1002,3 +1002,65 @@ c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and 
 
 ## Manual verification (user, F5)
 Phase 1.2 save/load: N generated new terrain each press; F7 before any save logged an error and left the world unchanged; F6 saved; F7 restored the original terrain exactly; camera bounds stopped at the terrain edge after N and F7; after relaunch F7 loaded the saved world. Verified manually on 2026-10-14. Result: pass.
+
+## P1-3a-i — Road Graph Data Model
+
+### 2026-10-15 - Implemented RoadIds, RoadGraph and tests
+- **What changed**:
+  1. Updated `tests/MedievalCityBuilder.Tests/MedievalCityBuilder.Tests.csproj` to include `..\..\src\Roads\**\*.cs` compile items.
+  2. Created `src/Roads/RoadIds.cs` with `RoadNodeId` and `RoadSegmentId` readonly record structs with ToString overrides.
+  3. Created `src/Roads/RoadGraph.cs` with sealed class, deterministic SortedDictionary storage, IDs starting at 1 never reused, API per spec with XML comments and in-memory only class comment.
+  4. Created `tests/MedievalCityBuilder.Tests/RoadGraphTests.cs` covering all required scenarios.
+  5. Checked off "Road path representation" in TODO.md section 1.3.
+- **Commands**:
+  - `git add` / `git commit` per item (5 commits)
+  - `./tools/build.ps1`
+  - `dotnet test tests/MedievalCityBuilder.Tests`
+  - `./tools/run-headless.ps1`
+- **Verification Results**:
+  - `./tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for C:\Users\Admin\Coding\medieval-city-builder\tests\MedievalCityBuilder.Tests\bin\Debug\net8.0\MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    A total of 1 test files matched the specified pattern.
+
+    Passed!  - Failed:     0, Passed:   183, Skipped:     0, Total:   183, Duration: 779 ms - MedievalCityBuilder.Tests.dll (net8.0)
+    ```
+  - `./tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Keys: F6 save, F7 load, N new random world
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR". The two original TerrainView log lines are unchanged, plus "Main scene loaded" and "Keys" hint lines are present.
+- **Git log --oneline -8**:
+    ```
+    c34f5f0 Add RoadGraph unit tests
+    164ad29 Implement RoadGraph data model
+    f51aaa3 Add RoadIds record structs
+    3529f4a Add Roads compile include to test csproj
+    1fea7e0 Merge phase1-2f-save-file: save file I/O, ApplyWorld, F6/F7/N keys
+    cb4853f docs: record manual verification of Phase 1.2 save/load
+    03647b4 Track Godot .uid file for WorldSaveFile
+    dd2feb8 docs: update git log in PROGRESS.md with final commit
+    ```
+- **Test total**: 183 tests passed (157 existing + 26 new RoadGraph tests).
+
+### Final Status (P1-3a-i)
+- **Done**: All 5 scope items implemented and verified.
+- **Verified**: Build succeeds; 183 tests pass; headless run clean with required log lines, zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Player road drawing, terrain validity, entrance snapping, stone/gold cost.
+
+
