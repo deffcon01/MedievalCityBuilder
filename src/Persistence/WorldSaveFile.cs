@@ -46,7 +46,20 @@ namespace MedievalCityBuilder.Persistence
             {
                 if (!success && File.Exists(tempPath))
                 {
-                    File.Delete(tempPath);
+                    try
+                    {
+                        File.Delete(tempPath);
+                    }
+                    catch (IOException)
+                    {
+                        // Ignore: cleanup failure should not mask the original exception
+                        // (e.g., UnauthorizedAccessException on Windows if tempPath is a directory)
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // Ignore: cleanup failure should not mask the original exception
+                        // (e.g., Windows throws this when File.Delete is called on a directory)
+                    }
                 }
             }
         }
