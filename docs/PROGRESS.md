@@ -999,3 +999,6 @@ c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and 
 - **Verified**: Build succeeds; 157 tests pass; headless run clean with all required log lines, zero WARNING/ERROR lines.
 - **Blocked**: None.
 - **Next**: Phase 1.3 — Roads or other Basic world items.
+
+## Manual verification (user, F5)
+Phase 1.2 save/load: N generated new terrain each press; F7 before any save logged an error and left the world unchanged; F6 saved; F7 restored the original terrain exactly; camera bounds stopped at the terrain edge after N and F7; after relaunch F7 loaded the saved world. Verified manually on 2026-10-14. Result: pass.
