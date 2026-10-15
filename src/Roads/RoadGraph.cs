@@ -14,6 +14,7 @@ namespace MedievalCityBuilder.Roads
         private readonly SortedDictionary<int, RoadNode> _nodes = new();
         private readonly SortedDictionary<int, RoadSegment> _segments = new();
         private readonly Dictionary<(int A, int B), RoadSegmentId> _segmentLookup = new();
+        private readonly Dictionary<int, SortedSet<int>> _segmentsByNode = new();
         private int _nextNodeId = 1;
         private int _nextSegmentId = 1;
 
@@ -28,6 +29,7 @@ namespace MedievalCityBuilder.Roads
             var id = new RoadNodeId(_nextNodeId++);
             var node = new RoadNode(id, x, z);
             _nodes[id.Value] = node;
+            _segmentsByNode[id.Value] = new SortedSet<int>();
             return id;
         }
 
@@ -55,6 +57,8 @@ namespace MedievalCityBuilder.Roads
             var segment = new RoadSegment(id, nodeA, nodeB);
             _segments[id.Value] = segment;
             _segmentLookup[normalized] = id;
+            _segmentsByNode[first].Add(id.Value);
+            _segmentsByNode[second].Add(id.Value);
             return id;
         }
 
@@ -68,6 +72,8 @@ namespace MedievalCityBuilder.Roads
 
             var normalized = (Math.Min(segment.A.Value, segment.B.Value), Math.Max(segment.A.Value, segment.B.Value));
             _segmentLookup.Remove(normalized);
+            _segmentsByNode[segment.A.Value].Remove(id.Value);
+            _segmentsByNode[segment.B.Value].Remove(id.Value);
             _segments.Remove(id.Value);
         }
 
@@ -79,12 +85,10 @@ namespace MedievalCityBuilder.Roads
             if (!_nodes.ContainsKey(id.Value))
                 throw new ArgumentException("Node does not exist.");
 
-            foreach (var seg in _segments.Values)
-            {
-                if (seg.A.Value == id.Value || seg.B.Value == id.Value)
-                    throw new InvalidOperationException("Node is still connected to one or more segments.");
-            }
+            if (_segmentsByNode[id.Value].Count > 0)
+                throw new InvalidOperationException("Node is still connected to one or more segments.");
 
+            _segmentsByNode.Remove(id.Value);
             _nodes.Remove(id.Value);
         }
 
@@ -124,10 +128,9 @@ namespace MedievalCityBuilder.Roads
                 throw new ArgumentException("Node does not exist.");
 
             var list = new List<RoadSegment>();
-            foreach (var seg in _segments.Values)
+            foreach (var segId in _segmentsByNode[node.Value])
             {
-                if (seg.A.Value == node.Value || seg.B.Value == node.Value)
-                    list.Add(seg);
+                list.Add(_segments[segId]);
             }
             return list;
         }
@@ -137,17 +140,17 @@ namespace MedievalCityBuilder.Roads
             if (!_nodes.ContainsKey(node.Value))
                 throw new ArgumentException("Node does not exist.");
 
-            var neighbors = new HashSet<int>();
-            foreach (var seg in _segments.Values)
+            var neighbors = new SortedSet<int>();
+            foreach (var segId in _segmentsByNode[node.Value])
             {
+                var seg = _segments[segId];
                 if (seg.A.Value == node.Value)
                     neighbors.Add(seg.B.Value);
-                else if (seg.B.Value == node.Value)
+                else
                     neighbors.Add(seg.A.Value);
             }
 
-            var ordered = neighbors.Select(v => new RoadNodeId(v)).OrderBy(id => id.Value).ToList();
-            return ordered;
+            return neighbors.Select(v => new RoadNodeId(v)).ToList();
         }
 
         public double GetSegmentLength(RoadSegmentId id)
@@ -176,15 +179,10 @@ namespace MedievalCityBuilder.Roads
             while (queue.Count > 0)
             {
                 var current = queue.Dequeue();
-                foreach (var seg in _segments.Values)
+                foreach (var segId in _segmentsByNode[current])
                 {
-                    int neighbor = -1;
-                    if (seg.A.Value == current)
-                        neighbor = seg.B.Value;
-                    else if (seg.B.Value == current)
-                        neighbor = seg.A.Value;
-                    else
-                        continue;
+                    var seg = _segments[segId];
+                    int neighbor = seg.A.Value == current ? seg.B.Value : seg.A.Value;
 
                     if (neighbor == b.Value)
                         return true;
@@ -220,15 +218,10 @@ namespace MedievalCityBuilder.Roads
                 while (queue.Count > 0)
                 {
                     var current = queue.Dequeue();
-                    foreach (var seg in _segments.Values)
+                    foreach (var segId in _segmentsByNode[current])
                     {
-                        int neighbor = -1;
-                        if (seg.A.Value == current)
-                            neighbor = seg.B.Value;
-                        else if (seg.B.Value == current)
-                            neighbor = seg.A.Value;
-                        else
-                            continue;
+                        var seg = _segments[segId];
+                        int neighbor = seg.A.Value == current ? seg.B.Value : seg.A.Value;
 
                         if (visited.Add(neighbor))
                         {
