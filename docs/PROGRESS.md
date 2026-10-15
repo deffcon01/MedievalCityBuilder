@@ -986,12 +986,12 @@ c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and 
   - `./tools/run-headless.ps1` → Output contains both original TerrainView log lines unchanged, "MedievalCityBuilder: Main scene loaded", "Keys: F6 save, F7 load, N new random world", zero WARNING/ERROR lines
 - **Git log --oneline -6**:
 ```
+a58dbc2 Item 5: Record verification results in PROGRESS.md, update TODO.md
 a18fc1b Item 4: Add save/load/new world key handlers to Main.cs
 6fda7b3 Item 3: Refactor TerrainView.cs - Add ApplyWorld(WorldSaveData) method, move terrain/water building out of _Ready, add CurrentWorld property
 4150dee docs: record P1-2f-testfix verification
 6938cc5 Item 3: Fix CS8604 warnings with null-forgiving operator for intentional null path tests
 c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and UnauthorizedAccessException
-47a83d4 Item 1: Fix Save_FailedSave_PreservesOriginalFile to accept IOException or UnauthorizedAccessException
 ```
 
 ### Final Status (P1-2f Items 4-5)
