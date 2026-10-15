@@ -25,7 +25,7 @@
 - [x] Terrain representation.
 - [x] Water representation.
 - [x] Basic world seed.
-- [ ] Save/load seed.
+- [x] Save/load seed.
 
 ### 1.3 Roads
 - [ ] Road path representation.

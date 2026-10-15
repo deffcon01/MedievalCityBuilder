@@ -800,3 +800,205 @@ c3a19a4 Merge phase1-2d-water: sea-level water plane
 - **Verified**: Build succeeds; 138 tests pass (18 new + 120 previous); headless run clean with both TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
 - **Blocked**: None.
 - **Next**: Phase 1.3 — Roads or other Basic world items.
+
+---
+
+## P1-2f-testfix — Fix Failing Test and Warnings
+
+### 2026-10-14 - Fixed test and warnings in WorldSaveFile
+- **What changed**:
+  1. **Item 1** (`tests/MedievalCityBuilder.Tests/WorldSaveFileTests.cs`): Updated `Save_FailedSave_PreservesOriginalFile` to use `Assert.ThrowsAny<Exception>` and assert the exception is `IOException` or `UnauthorizedAccessException` (not `SaveFormatException` or `ArgumentException`). Added comment: "Windows throws UnauthorizedAccessException when a file is opened on a directory path".
+  2. **Item 2** (`src/Persistence/WorldSaveFile.cs`): Wrapped the cleanup `File.Delete(tempPath)` in the `finally` block with `try/catch` that ignores `IOException` and `UnauthorizedAccessException`. This ensures the original exception propagates and cleanup never deletes a directory.
+  3. **Item 3** (`tests/MedievalCityBuilder.Tests/WorldSaveFileTests.cs`): Fixed two CS8604 warnings by using null-forgiving operator (`badPath!`) where tests intentionally pass null paths in `Save_NullEmptyWhitespacePath_ThrowsArgumentException` and `Load_NullEmptyWhitespacePath_ThrowsArgumentException`.
+- **Commands**: 3 commits on `phase1-2f-save-file`
+- **Verification Results**:
+  - `tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:   157, Skipped:     0, Total:   157, Duration: 55 ms
+    ```
+    (Total test suite: 157 tests, all passing, **no warnings** from these test files)
+  - `tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. The two required TerrainView and WaterPlane log lines are present.
+
+### Git Log (phase1-2f-save-file)
+```
+6938cc5 Item 3: Fix CS8604 warnings with null-forgiving operator for intentional null path tests
+c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and UnauthorizedAccessException
+47a83d4 Item 1: Fix Save_FailedSave_PreservesOriginalFile to accept IOException or UnauthorizedAccessException
+d69c437 P1-2f: Add WorldSaveFile tests with round-trip, BOM, failed-save-preservation
+66f6980 P1-2f: Implement WorldSaveFile.Save/Load
+b0dec52 Merge phase1-2e-save-format: world save format and JSON serializer
+```
+
+### Final Status (P1-2f-testfix)
+- **Done**: All 3 items implemented and verified.
+- **Verified**: Build succeeds; 157 tests pass (19 new from P1-2f + 138 previous); headless run clean with TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.3 — Roads or other Basic world items.
+
+---
+
+## P1-2f Item 3 — Refactor TerrainView.cs to Use WorldSaveData
+
+### 2026-10-14 - Refactored TerrainView.cs
+- **What changed**:
+  1. Added `using MedievalCityBuilder.Persistence;` to `src/Presentation/TerrainView.cs`.
+  2. Moved all terrain and water building code out of `_Ready` into a new public method `ApplyWorld(WorldSaveData data)`.
+  3. `ApplyWorld` first removes all previously built children (for each child in `GetChildren()`: `RemoveChild(child)`, then `child.QueueFree()`), then rebuilds the terrain mesh, water plane, and `WorldExtentsXZ` from the provided data.
+  4. Uses `data.Generation` (seed, version, size), `data.Terrain`, and `data.Water.SeaLevel` instead of `TerrainSettings.Default` and the `SeaLevel` export.
+  5. Added public property `WorldSaveData CurrentWorld { get; private set; }` set at the end of `ApplyWorld`.
+  6. `_Ready` now builds an initial `WorldSaveData` from the existing exports (`new WorldGenerationSettings((ulong)Seed, WorldGenerationSettings.CurrentGeneratorVersion, WorldSize)`, `TerrainSettings.Default`, `new WaterSettings(SeaLevel)`) and calls `ApplyWorld`.
+  7. Kept `CellSize` and `HeightScale` as exports (they are NOT saved yet).
+  8. Kept the water plane's name "WaterPlane".
+  9. Kept both existing `GD.Print` lines with exactly the same format strings, but now print values from the data (`data.Generation.Seed`, `data.Generation.Size`, `data.Water.SeaLevel`).
+  10. Did not change terrain or mesh algorithms.
+- **Commands**: 1 commit on `phase1-2f-save-file`
+- **Verification Results**:
+  - `./tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:   157, Skipped:     0, Total:   157, Duration: 50 ms
+    ```
+    (Total test suite: **157 tests**, all passing)
+  - `./tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. The two required TerrainView and WaterPlane log lines are present with unchanged format.
+
+### Git Log (phase1-2f-save-file)
+```
+6fda7b3 Item 3: Refactor TerrainView.cs - Add ApplyWorld(WorldSaveData) method, move terrain/water building out of _Ready, add CurrentWorld property
+4150dee docs: record P1-2f-testfix verification
+6938cc5 Item 3: Fix CS8604 warnings with null-forgiving operator for intentional null path tests
+c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and UnauthorizedAccessException
+47a83d4 Item 1: Fix Save_FailedSave_PreservesOriginalFile to accept IOException or UnauthorizedAccessException
+```
+
+### Final Status (P1-2f Item 3)
+- **Done**: Item 3 implemented and verified.
+- **Verified**: Build succeeds; 157 tests pass; headless run clean with both TerrainView and WaterPlane log lines (unchanged format), zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.3 — Roads or other Basic world items.
+
+---
+
+## P1-2f Item 4 — Add Save/Load/New World Key Handlers to Main.cs
+
+### 2026-10-14 - Added save/load/new world key handlers
+- **What changed**:
+  1. Updated `src/Presentation/Main.cs`:
+     - Added private fields `_terrainView` and `_cameraRig` (with `= null!;` to satisfy CS8618).
+     - Extracted camera bounds setup into private `ApplyCameraBounds()` method: uses same 2-unit inset from `_terrainView.WorldExtentsXZ` and same pivot Y from `_terrainView.HeightScaleValue * 0.5`.
+     - `_Ready` calls `ApplyCameraBounds()`, keeps "MedievalCityBuilder: Main scene loaded" log, adds "Keys: F6 save, F7 load, N new random world" hint line.
+     - Added `_UnhandledKeyInput(InputEvent @event)` handling F6, F7, N (only `InputEventKey` with `Pressed` true and `Echo` false):
+       - **F6 (Key.F6)**: Saves `_terrainView.CurrentWorld` to `ProjectSettings.GlobalizePath("user://saves/world.json")` via `WorldSaveFile.Save`. Logs "Saved world to <absolute path>". Catches `IOException`, `UnauthorizedAccessException`; logs with `GD.PrintErr`; does not crash.
+       - **F7 (Key.F7)**: Loads from same path via `WorldSaveFile.Load`, calls `_terrainView.ApplyWorld(loaded)`, then `ApplyCameraBounds()`. Logs "Loaded world: seed=<seed> size=<size>". Catches `FileNotFoundException`, `SaveFormatException`, `IOException`, `UnauthorizedAccessException`; logs clear message with `GD.PrintErr`; leaves current world unchanged.
+       - **N (Key.N)**: Creates new `WorldSaveData` with random seed (`(ulong)new System.Random(unchecked((int)DateTime.Now.Ticks)).NextInt64()`), CURRENT world's size and generator version, `TerrainSettings.Default`, `WaterSettings.Default`. Calls `_terrainView.ApplyWorld` then `ApplyCameraBounds()`. Logs "New world: seed=<seed>".
+       - All key actions mark input as handled with `GetViewport().SetInputAsHandled()`.
+  2. Updated `src/Presentation/TerrainView.cs`: Fixed CS8618 warning on `CurrentWorld` property by adding `= null!;` initializer (no other changes).
+- **Commands**: 1 commit on `phase1-2f-save-file`
+- **Verification Results**:
+  - `./tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:   157, Skipped:     0, Total:   157, Duration: 55 ms
+    ```
+    (Total test suite: **157 tests**, all passing, zero warnings)
+  - `./tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Keys: F6 save, F7 load, N new random world
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. The two required TerrainView and WaterPlane log lines are present with unchanged format. The "MedievalCityBuilder: Main scene loaded" and "Keys: F6 save, F7 load, N new random world" lines are present.
+
+### KNOWN LIMITATIONS
+- CellSize and HeightScale are not saved (exports only, not part of WorldSaveData).
+- No autosave; only manual F6/F7.
+- One save slot (user://saves/world.json).
+- Debug keys F6/F7/N are temporary.
+- A failed rebuild after loading (e.g., if ApplyWorld threw) would leave an empty world (no children); current code does not catch exceptions from ApplyWorld.
+
+### Manual Checklist (unverified manually)
+- [ ] Launch shows the usual terrain
+- [ ] Press F7 before any save and see a clear error with the world unchanged
+- [ ] Press F6 and see the "Saved world" log
+- [ ] Press N twice and see the terrain change each time
+- [ ] Press F7 and see the ORIGINAL terrain return exactly
+- [ ] Camera bounds still stop at the new terrain edge after N and F7
+- [ ] Edit the saved file to invalid JSON and press F7: an error is logged and the world is unchanged
+- [ ] Close and relaunch, press F7, and the saved world loads
+
+### TODO.md Update
+- Checked off "Save/load seed" in TODO.md section 1.2 (automated tests pass; manual items remain unverified).
+
+---
+
+## P1-2f Item 5 — Verification and Documentation
+
+### 2026-10-14 - Verification complete
+- **What changed**: All verification commands executed and passed.
+  - `./tools/build.ps1` → Build succeeded (0 warnings, 0 errors)
+  - `dotnet test tests/MedievalCityBuilder.Tests` → 157 tests passed, 0 failed
+  - `./tools/run-headless.ps1` → Output contains both original TerrainView log lines unchanged, "MedievalCityBuilder: Main scene loaded", "Keys: F6 save, F7 load, N new random world", zero WARNING/ERROR lines
+- **Git log --oneline -6**:
+```
+a58dbc2 Item 5: Record verification results in PROGRESS.md, update TODO.md
+a18fc1b Item 4: Add save/load/new world key handlers to Main.cs
+6fda7b3 Item 3: Refactor TerrainView.cs - Add ApplyWorld(WorldSaveData) method, move terrain/water building out of _Ready, add CurrentWorld property
+4150dee docs: record P1-2f-testfix verification
+6938cc5 Item 3: Fix CS8604 warnings with null-forgiving operator for intentional null path tests
+c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and UnauthorizedAccessException
+```
+
+### Final Status (P1-2f Items 4-5)
+- **Done**: Items 4 and 5 implemented and verified.
+- **Verified**: Build succeeds; 157 tests pass; headless run clean with all required log lines, zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.3 — Roads or other Basic world items.
+
+## Manual verification (user, F5)
+Phase 1.2 save/load: N generated new terrain each press; F7 before any save logged an error and left the world unchanged; F6 saved; F7 restored the original terrain exactly; camera bounds stopped at the terrain edge after N and F7; after relaunch F7 loaded the saved world. Verified manually on 2026-10-14. Result: pass.

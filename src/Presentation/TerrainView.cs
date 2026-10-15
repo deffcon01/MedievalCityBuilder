@@ -1,5 +1,6 @@
 using Godot;
 
+using MedievalCityBuilder.Persistence;
 using MedievalCityBuilder.World;
 
 namespace MedievalCityBuilder.Presentation;
@@ -32,16 +33,41 @@ public partial class TerrainView : Node3D
     /// </summary>
     public double HeightScaleValue => HeightScale;
 
+    /// <summary>
+    /// The current world data used to build the terrain and water.
+    /// </summary>
+    public WorldSaveData CurrentWorld { get; private set; } = null!;
+
     public override void _Ready()
     {
-        // Build world generation settings
-        var worldSettings = new WorldGenerationSettings(
+        // Build initial world data from exports and apply
+        var generation = new WorldGenerationSettings(
             (ulong)Seed,
             WorldGenerationSettings.CurrentGeneratorVersion,
             WorldSize
         );
-
         var terrainSettings = TerrainSettings.Default;
+        var waterSettings = new WaterSettings(SeaLevel);
+        var initialData = new WorldSaveData(generation, terrainSettings, waterSettings);
+        ApplyWorld(initialData);
+    }
+
+    /// <summary>
+    /// Builds or rebuilds the terrain mesh, water plane, and world extents from the provided world data.
+    /// Removes all previously built children to avoid name clashes.
+    /// </summary>
+    public void ApplyWorld(WorldSaveData data)
+    {
+        // Remove all previously built children
+        foreach (var child in GetChildren())
+        {
+            RemoveChild(child);
+            child.QueueFree();
+        }
+
+        var worldSettings = data.Generation;
+        var terrainSettings = data.Terrain;
+        var waterSettings = data.Water;
         var table = new WorldSizeTable();
 
         // Generate heightmap
@@ -103,7 +129,6 @@ public partial class TerrainView : Node3D
         WorldExtentsXZ = (-extentX * 0.5f, extentX * 0.5f, -extentZ * 0.5f, extentZ * 0.5f);
 
         // Create water plane
-        var waterSettings = new WaterSettings(SeaLevel);
         var waterPlaneMesh = new PlaneMesh
         {
             Size = new Vector2(extentX, extentZ),
@@ -119,7 +144,7 @@ public partial class TerrainView : Node3D
         // The plane is centered at its local origin, so position at (extentX/2, y, extentZ/2) relative to the uncentered terrain
         // But the terrain is now centered at Position = (-extentX/2, 0, -extentZ/2), so we need to place water at
         // local position (extentX/2, SeaLevel * HeightScale, extentZ/2) relative to TerrainView
-        waterMeshInstance.Position = new Vector3(extentX * 0.5f, (float)(SeaLevel * HeightScale), extentZ * 0.5f);
+        waterMeshInstance.Position = new Vector3(extentX * 0.5f, (float)(waterSettings.SeaLevel * HeightScale), extentZ * 0.5f);
 
         var waterMaterial = new StandardMaterial3D
         {
@@ -137,7 +162,9 @@ public partial class TerrainView : Node3D
 
         // Log terrain and water info
         double underwaterFraction = WaterAnalysis.UnderwaterFraction(heightmap, waterSettings);
-        GD.Print($"TerrainView: seed={Seed}, size={WorldSize}, vertices={vertexCount}, extents=({WorldExtentsXZ.minX}, {WorldExtentsXZ.maxX}, {WorldExtentsXZ.minZ}, {WorldExtentsXZ.maxZ})");
-        GD.Print($"WaterPlane: SeaLevel={SeaLevel}, underwaterFraction={underwaterFraction:F4}");
+        GD.Print($"TerrainView: seed={data.Generation.Seed}, size={data.Generation.Size}, vertices={vertexCount}, extents=({WorldExtentsXZ.minX}, {WorldExtentsXZ.maxX}, {WorldExtentsXZ.minZ}, {WorldExtentsXZ.maxZ})");
+        GD.Print($"WaterPlane: SeaLevel={data.Water.SeaLevel}, underwaterFraction={underwaterFraction:F4}");
+
+        CurrentWorld = data;
     }
 }
