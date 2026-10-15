@@ -454,35 +454,85 @@ namespace MedievalCityBuilder.Tests
         [Fact]
         public void Diagnostic_Seed12345Terrain_CountsValidUnderwaterTooSteep()
         {
-            // This test requires the terrain generator. We'll use the existing TerrainGenerator
-            // from the World namespace to generate the terrain for seed 12345.
-            // Note: This test is diagnostic - it only asserts that counts sum to total and are repeatable.
+            // Generate terrain for seed 12345, GeneratorVersion 1, TerrainSettings.Default, Small size
+            var world = new WorldGenerationSettings(12345, 1, WorldSize.Small);
+            var terrain = TerrainSettings.Default;
+            var table = new WorldSizeTable();
+            var heightmap = TerrainGenerator.Generate(world, terrain, table);
 
-            // We need to check if TerrainGenerator is available
-            // For now, we'll create a simplified version that mimics the expected behavior
-            // The actual diagnostic will be run manually and results recorded in PROGRESS.md
+            // Small size = 128 cells per side = 129 vertices per side
+            // TerrainSurface.Centered(heightmap, 1.0, 10.0) -> extents -64..64
+            var surface = TerrainSurface.Centered(heightmap, 1.0, 10.0);
+            var water = WaterSettings.Default; // SeaLevel 0.35
+            var settings = RoadPlacementSettings.Default; // MaxSlope 0.5, SampleSpacing 1.0, MinSegmentLength 1.0
 
-            // This test is a placeholder for the diagnostic. The actual diagnostic
-            // should be run by invoking the terrain generator directly.
-            // We'll skip the automated assertion here and just ensure the test framework works.
+            // Horizontal 8-unit segments: x from -60 to 52 step 4, z from -60 to 60 step 4, direction +x
+            // Segment from (x, z) to (x+8, z)
+            int validCount = 0;
+            int underwaterCount = 0;
+            int tooSteepCount = 0;
+            int outOfBoundsCount = 0;
+            int tooShortCount = 0;
+            int totalSegments = 0;
 
-            // To properly implement this, we'd need to reference the TerrainGenerator
-            // which is in src/World. Let me check if it's accessible.
-            // Since the test project includes src/World/**, we can use it.
-
-            // Actually, let me implement this properly using the existing generator
-            var generatorType = Type.GetType("MedievalCityBuilder.World.TerrainGenerator, MedievalCityBuilder");
-            if (generatorType == null)
+            for (double z = -60.0; z <= 60.0; z += 4.0)
             {
-                // Generator not available in test context - skip this diagnostic test
-                // The diagnostic will be run manually
-                Assert.True(true, "Diagnostic test skipped - TerrainGenerator not accessible in test context");
-                return;
+                for (double x = -60.0; x <= 52.0; x += 4.0)
+                {
+                    var result = RoadPlacementValidator.ValidateSegment(surface, water, settings, x, z, x + 8.0, z);
+                    totalSegments++;
+
+                    if (result.IsValid)
+                    {
+                        validCount++;
+                    }
+                    else
+                    {
+                        switch (result.Failure)
+                        {
+                            case RoadPlacementFailure.Underwater:
+                                underwaterCount++;
+                                break;
+                            case RoadPlacementFailure.TooSteep:
+                                tooSteepCount++;
+                                break;
+                            case RoadPlacementFailure.OutOfBounds:
+                                outOfBoundsCount++;
+                                break;
+                            case RoadPlacementFailure.TooShort:
+                                tooShortCount++;
+                                break;
+                        }
+                    }
+                }
             }
 
-            // If we get here, we can run the full diagnostic
-            // But for now, just pass since we can't easily invoke the generator from test
-            Assert.True(true, "Diagnostic placeholder");
+            // Assert that the three main counts sum to total (other failures like OutOfBounds/TooShort are possible but not counted in the three)
+            int sumThree = validCount + underwaterCount + tooSteepCount;
+            Assert.Equal(totalSegments, sumThree + outOfBoundsCount + tooShortCount);
+
+            // Assert repeatability - run again and compare
+            int validCount2 = 0;
+            int underwaterCount2 = 0;
+            int tooSteepCount2 = 0;
+
+            for (double z = -60.0; z <= 60.0; z += 4.0)
+            {
+                for (double x = -60.0; x <= 52.0; x += 4.0)
+                {
+                    var result = RoadPlacementValidator.ValidateSegment(surface, water, settings, x, z, x + 8.0, z);
+                    if (result.IsValid) validCount2++;
+                    else if (result.Failure == RoadPlacementFailure.Underwater) underwaterCount2++;
+                    else if (result.Failure == RoadPlacementFailure.TooSteep) tooSteepCount2++;
+                }
+            }
+
+            Assert.Equal(validCount, validCount2);
+            Assert.Equal(underwaterCount, underwaterCount2);
+            Assert.Equal(tooSteepCount, tooSteepCount2);
+
+            // Output the counts for PROGRESS.md
+            Console.WriteLine($"Diagnostic counts for seed 12345: Valid={validCount}, Underwater={underwaterCount}, TooSteep={tooSteepCount}, OutOfBounds={outOfBoundsCount}, TooShort={tooShortCount}, Total={totalSegments}");
         }
     }
 }
