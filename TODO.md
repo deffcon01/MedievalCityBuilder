@@ -28,7 +28,7 @@
 - [x] Save/load seed.
 
 ### 1.3 Roads
-- [ ] Road path representation.
+- [x] Road path representation.
 - [ ] Player road drawing.
 - [ ] Terrain validity.
 - [ ] Entrance snapping.
