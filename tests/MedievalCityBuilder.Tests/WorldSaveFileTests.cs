@@ -201,7 +201,7 @@ namespace MedievalCityBuilder.Tests
                 WaterSettings.Default
             );
 
-            Assert.Throws<ArgumentException>(() => WorldSaveFile.Save(badPath, data));
+            Assert.Throws<ArgumentException>(() => WorldSaveFile.Save(badPath!, data));
         }
 
         [Theory]
@@ -212,7 +212,7 @@ namespace MedievalCityBuilder.Tests
         [InlineData("\n")]
         public void Load_NullEmptyWhitespacePath_ThrowsArgumentException(string? badPath)
         {
-            Assert.Throws<ArgumentException>(() => WorldSaveFile.Load(badPath));
+            Assert.Throws<ArgumentException>(() => WorldSaveFile.Load(badPath!));
         }
 
         [Fact]
