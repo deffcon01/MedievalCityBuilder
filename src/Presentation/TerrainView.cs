@@ -36,7 +36,7 @@ public partial class TerrainView : Node3D
     /// <summary>
     /// The current world data used to build the terrain and water.
     /// </summary>
-    public WorldSaveData CurrentWorld { get; private set; }
+    public WorldSaveData CurrentWorld { get; private set; } = null!;
 
     public override void _Ready()
     {
