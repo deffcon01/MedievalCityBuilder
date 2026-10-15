@@ -21,6 +21,7 @@
     <Compile Include="..\..\src\Core\**\*.cs" />
     <Compile Include="..\..\src\World\**\*.cs" />
     <Compile Include="..\..\src\Persistence\**\*.cs" />
+    <Compile Include="..\..\src\Roads\**\*.cs" />
   </ItemGroup>
 
 </Project>
