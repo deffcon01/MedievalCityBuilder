@@ -151,15 +151,81 @@ namespace MedievalCityBuilder.Tests
             Assert.Throws<SaveFormatException>(() => WorldSaveSerializer.Deserialize(null!));
         }
 
-        [Fact]
-        public void Deserialize_UnknownExtraField_IsIgnoredAndLoadsSuccessfully()
+        [Theory]
+        [InlineData("{\"generatorVersion\": 1, \"seed\": \"12345\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}", "formatVersion")]
+        [InlineData("{\"formatVersion\": 1, \"seed\": \"12345\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}", "generatorVersion")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}", "seed")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"12345\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}", "worldSize")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"12345\", \"worldSize\": \"Small\", \"water\": {\"seaLevel\": 0.35}}", "terrain")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"12345\", \"worldSize\": \"Small\", \"terrain\": {\"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}", "octaves")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"12345\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}", "baseFeatureSizeCells")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"12345\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}", "persistence")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"12345\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5}, \"water\": {\"seaLevel\": 0.35}}", "lacunarity")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"12345\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}}", "water")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"12345\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {}}", "seaLevel")]
+        public void Deserialize_MissingField_ThrowsSaveFormatExceptionWithFieldName(string json, string expectedField)
         {
-            string json = "{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"12345\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}, \"unknownExtraField\": 999}";
+            var exception = Assert.Throws<SaveFormatException>(() => WorldSaveSerializer.Deserialize(json));
+            Assert.Contains(expectedField, exception.Message);
+        }
 
+        [Theory]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \" 5\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"5 \", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"+5\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}")]
+        [InlineData("{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"18446744073709551616\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}")]
+        public void Deserialize_InvalidSeed_ThrowsSaveFormatException(string json)
+        {
+            Assert.Throws<SaveFormatException>(() => WorldSaveSerializer.Deserialize(json));
+        }
+
+        [Fact]
+        public void Deserialize_SeedUlongMaxValue_LoadsSuccessfully()
+        {
+            string json = "{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"18446744073709551615\", \"worldSize\": \"Small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}";
             var data = WorldSaveSerializer.Deserialize(json);
-            Assert.NotNull(data);
-            Assert.Equal(12345UL, data.Generation.Seed);
-            Assert.Equal(WorldSize.Small, data.Generation.Size);
+            Assert.Equal(ulong.MaxValue, data.Generation.Seed);
+        }
+
+        [Fact]
+        public void Deserialize_WorldSizeSmallLowercase_ThrowsSaveFormatException()
+        {
+            string json = "{\"formatVersion\": 1, \"generatorVersion\": 1, \"seed\": \"12345\", \"worldSize\": \"small\", \"terrain\": {\"octaves\": 4, \"baseFeatureSizeCells\": 64, \"persistence\": 0.5, \"lacunarity\": 2}, \"water\": {\"seaLevel\": 0.35}}";
+            Assert.Throws<SaveFormatException>(() => WorldSaveSerializer.Deserialize(json));
+        }
+
+        [Fact]
+        public void CultureTest_RoundTripWithAwkwardDoubles()
+        {
+            var original = new WorldSaveData(
+                new WorldGenerationSettings(987654321UL, WorldGenerationSettings.CurrentGeneratorVersion, WorldSize.Medium),
+                new TerrainSettings(5, 0.1, 1.0 / 3.0, 1e-9),
+                new WaterSettings(0.1)
+            );
+
+            var originalCulture = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+                string json = WorldSaveSerializer.Serialize(original);
+                
+                // Assert no commas (excluding property names/values if any, but the JSON format uses dot for decimals)
+                // The issue might be if other things have commas, but in this specific JSON it should be only decimals.
+                // Actually, wait, the JSON might have commas between fields.
+                // Let's assert that there is no *decimal* comma.
+                Assert.DoesNotContain("0,1", json);
+                Assert.DoesNotContain("1,0", json);
+                Assert.DoesNotContain("0,3", json);
+                Assert.Contains("0.1", json);
+
+                var deserialized = WorldSaveSerializer.Deserialize(json);
+                Assert.Equal(original, deserialized);
+            }
+            finally
+            {
+                System.Globalization.CultureInfo.CurrentCulture = originalCulture;
+            }
         }
     }
 }
