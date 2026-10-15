@@ -852,3 +852,61 @@ b0dec52 Merge phase1-2e-save-format: world save format and JSON serializer
 - **Verified**: Build succeeds; 157 tests pass (19 new from P1-2f + 138 previous); headless run clean with TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
 - **Blocked**: None.
 - **Next**: Phase 1.3 — Roads or other Basic world items.
+
+---
+
+## P1-2f Item 3 — Refactor TerrainView.cs to Use WorldSaveData
+
+### 2026-10-14 - Refactored TerrainView.cs
+- **What changed**:
+  1. Added `using MedievalCityBuilder.Persistence;` to `src/Presentation/TerrainView.cs`.
+  2. Moved all terrain and water building code out of `_Ready` into a new public method `ApplyWorld(WorldSaveData data)`.
+  3. `ApplyWorld` first removes all previously built children (for each child in `GetChildren()`: `RemoveChild(child)`, then `child.QueueFree()`), then rebuilds the terrain mesh, water plane, and `WorldExtentsXZ` from the provided data.
+  4. Uses `data.Generation` (seed, version, size), `data.Terrain`, and `data.Water.SeaLevel` instead of `TerrainSettings.Default` and the `SeaLevel` export.
+  5. Added public property `WorldSaveData CurrentWorld { get; private set; }` set at the end of `ApplyWorld`.
+  6. `_Ready` now builds an initial `WorldSaveData` from the existing exports (`new WorldGenerationSettings((ulong)Seed, WorldGenerationSettings.CurrentGeneratorVersion, WorldSize)`, `TerrainSettings.Default`, `new WaterSettings(SeaLevel)`) and calls `ApplyWorld`.
+  7. Kept `CellSize` and `HeightScale` as exports (they are NOT saved yet).
+  8. Kept the water plane's name "WaterPlane".
+  9. Kept both existing `GD.Print` lines with exactly the same format strings, but now print values from the data (`data.Generation.Seed`, `data.Generation.Size`, `data.Water.SeaLevel`).
+  10. Did not change terrain or mesh algorithms.
+- **Commands**: 1 commit on `phase1-2f-save-file`
+- **Verification Results**:
+  - `./tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:   157, Skipped:     0, Total:   157, Duration: 50 ms
+    ```
+    (Total test suite: **157 tests**, all passing)
+  - `./tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. The two required TerrainView and WaterPlane log lines are present with unchanged format.
+
+### Git Log (phase1-2f-save-file)
+```
+6fda7b3 Item 3: Refactor TerrainView.cs - Add ApplyWorld(WorldSaveData) method, move terrain/water building out of _Ready, add CurrentWorld property
+4150dee docs: record P1-2f-testfix verification
+6938cc5 Item 3: Fix CS8604 warnings with null-forgiving operator for intentional null path tests
+c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and UnauthorizedAccessException
+47a83d4 Item 1: Fix Save_FailedSave_PreservesOriginalFile to accept IOException or UnauthorizedAccessException
+```
+
+### Final Status (P1-2f Item 3)
+- **Done**: Item 3 implemented and verified.
+- **Verified**: Build succeeds; 157 tests pass; headless run clean with both TerrainView and WaterPlane log lines (unchanged format), zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.3 — Roads or other Basic world items.
