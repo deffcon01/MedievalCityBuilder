@@ -17,7 +17,7 @@ namespace MedievalCityBuilder.Persistence
                 throw new ArgumentException("Path cannot be null, empty, or whitespace.", nameof(path));
             }
 
-            string directory = Path.GetDirectoryName(path);
+            string? directory = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
