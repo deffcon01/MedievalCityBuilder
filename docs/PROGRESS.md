@@ -1274,4 +1274,84 @@ Phase 1.2 save/load: N generated new terrain each press; F7 before any save logg
 - **Blocked**: None.
 - **Next**: Player road drawing, terrain validity, entrance snapping, stone/gold cost.
 
+---
+
+# Task P1-3a-ii-fix – Floating-point edge crash and overflow in road validation
+
+## 2026-10-15 - Fix ValidateSegment and TerrainSurface.Centered, add edge tests
+
+- **What changed**:
+  1. `src/World/TerrainSurface.cs` Centered – added null check throwing `ArgumentNullException(nameof(heightmap))`.
+  2. `src/Roads/RoadPlacementValidator.cs` ValidateSegment:
+     - Compute samples via linear interpolation `sx = x1 * (1 - t) + x2 * t`, `sz = z1 * (1 - t) + z2 * t`; use exact `x2/z2` for `i == numSteps`.
+     - Clamp each sample to `[surface.MinX, surface.MaxX]` and `[surface.MinZ, surface.MaxZ]`.
+     - Steps count computed as double, `Math.Ceiling(length / SampleSpacing)`, capped at 1,000,000 before casting.
+     - Removed always-true `if (i > 0)` guard; slope check runs for every sampled segment; comment updated.
+  3. `tests/MedievalCityBuilder.Tests/RoadPlacementEdgeTests.cs` created (7 tests):
+     - Flat 11×11 cellSize 0.1 edge segments four edges + diagonals both directions, Valid no throw.
+     - Flat 13×7 cellSize 0.3 non-square edges, Valid.
+     - Explicit constructor 8×9 cellSize 0.7 origin 0.1/-0.3 edges, Valid.
+     - Fuzz flat surface with DeterministicRandom(777): 3000 random segments with modes Min/Max/interior; ValidateSegment does not throw, `IsValid` symmetric, at least one Valid.
+     - Fuzz terrain surface seed 12345, GeneratorVersion 1, TerrainSettings.Default, 64×64 via TerrainGenerator + TerrainSurface.Centered(1.0,10.0); 3000 segments, no throw, symmetry, at least one Valid and at least one non-Valid.
+     - Tiny spacing settings SampleSpacing 1e-9, MaxSlope 0.5, MinSegmentLength 1.0 on flat surface; length ~5 segment returns Valid without hang/throw.
+     - TerrainSurface.Centered(null,1.0,10.0) throws ArgumentNullException.
+- **Commands**:
+  - `git add src/Roads/RoadPlacementValidator.cs src/World/TerrainSurface.cs; git commit -m "Fix floating-point edge crash and overflow in road validation"`
+  - `git add tests/MedievalCityBuilder.Tests/RoadPlacementEdgeTests.cs; git commit -m "Add edge and fuzz tests for road validation"`
+  - `./tools/build.ps1`
+  - `dotnet test tests/MedievalCityBuilder.Tests`
+  - `powershell -File tools/run-headless.ps1`
+
+- **Verification Results**:
+  - `./tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for C:\Users\Admin\Coding\medieval-city-builder\tests\MedievalCityBuilder.Tests\bin\Debug\net8.0\MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    A total of 1 test files matched the specified pattern.
+
+    Passed!  - Failed:     0, Passed:   250, Skipped:     0, Total:   250, Duration: 227 ms - MedievalCityBuilder.Tests.dll (net8.0)
+    ```
+    Test total: 250 tests passed (243 existing + 7 new). No warnings from src/World or src/Roads.
+  - Diagnostic seed 12345 test:
+    ```
+    Diagnostic counts for seed 12345: Valid=800, Underwater=99, TooSteep=0, OutOfBounds=0, TooShort=0, Total=899
+    ```
+    Counts unchanged vs pre-fix.
+  - `tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Keys: F6 save, F7 load, N new random world
+    Headless run completed successfully!
+    ```
+    - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR". The two original TerrainView log lines are unchanged, plus the "Main scene loaded" and "Keys" hint lines, with no warnings or errors.
+- **Git log --oneline -6**:
+  ```
+  b8afacc Add edge and fuzz tests for road validation
+  6fc188c Fix floating-point edge crash and overflow in road validation
+  8f386b5 Track Godot .uid files for road graph, road validity and terrain surface code
+  e88fc6b P1-3a-ii: update TODO and PROGRESS with verification and diagnostic counts
+  780810d P1-3a-ii: Add diagnostic test for seed 12345 terrain
+  01d8556 P1-3a-ii: Add RoadPlacementSettings, RoadPlacementResult, RoadPlacementValidator and tests
+  ```
+- **Notes**:
+  - Original tests missed the edge crash because they used binary-exact values and interior segments; the floating-point walk `x1 + dx * t` could place the sample just outside MaxX for non-binary cell sizes, causing `SampleNormalized` to throw `ArgumentOutOfRangeException`. The new interpolation + clamp + exact endpoint guarantees in-bounds sampling.
+  - Overflow protection via steps cap prevents `int` overflow for tiny SampleSpacing.
+
+### Final Status (P1-3a-ii-fix)
+- **Done**: Items 1, 2, 3 implemented and verified.
+- **Verified**: Build succeeds; 250 tests pass; diagnostic counts unchanged (Valid=800, Underwater=99, TooSteep=0, Total=899); headless run clean with required log lines, zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Continue Phase 1.3 road validity work per design.
+
 
