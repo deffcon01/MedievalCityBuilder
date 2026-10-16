@@ -30,7 +30,7 @@
 ### 1.3 Roads
 - [x] Road path representation.
 - [ ] Player road drawing.
-- [ ] Terrain validity.
+- [x] Terrain validity.
 - [ ] Entrance snapping.
 - [ ] Basic stone/gold cost.
 
