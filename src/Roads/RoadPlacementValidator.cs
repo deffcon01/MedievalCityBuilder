@@ -102,7 +102,12 @@ namespace MedievalCityBuilder.Roads
             }
             else
             {
-                numSteps = (int)Math.Ceiling(length / settings.SampleSpacing);
+                double stepsD = Math.Ceiling(length / settings.SampleSpacing);
+                if (stepsD > 1000000.0)
+                {
+                    stepsD = 1000000.0; // protects against tiny spacing values
+                }
+                numSteps = (int)stepsD;
                 if (numSteps < 1)
                 {
                     numSteps = 1;
@@ -123,8 +128,35 @@ namespace MedievalCityBuilder.Roads
             for (int i = 1; i <= numSteps; i++)
             {
                 double t = (double)i / numSteps;
-                double sx = x1 + dx * t;
-                double sz = z1 + dz * t;
+                double sx, sz;
+                if (i == numSteps)
+                {
+                    sx = x2;
+                    sz = z2;
+                }
+                else
+                {
+                    sx = x1 * (1.0 - t) + x2 * t;
+                    sz = z1 * (1.0 - t) + z2 * t;
+                }
+
+                if (sx < surface.MinX)
+                {
+                    sx = surface.MinX;
+                }
+                else if (sx > surface.MaxX)
+                {
+                    sx = surface.MaxX;
+                }
+
+                if (sz < surface.MinZ)
+                {
+                    sz = surface.MinZ;
+                }
+                else if (sz > surface.MaxZ)
+                {
+                    sz = surface.MaxZ;
+                }
 
                 double currNorm = surface.SampleNormalized(sx, sz);
 
@@ -134,21 +166,18 @@ namespace MedievalCityBuilder.Roads
                     return RoadPlacementResult.Fail(RoadPlacementFailure.Underwater);
                 }
 
-                // Check slope (skip for first sample since there's no previous)
-                if (i > 0)
+                // Check slope against previous sample
+                double currHeight = surface.SampleHeight(sx, sz);
+                double heightDiff = Math.Abs(currHeight - prevHeight);
+                double sampleDist = length / numSteps; // distance between consecutive samples
+                double slope = heightDiff / sampleDist;
+
+                if (slope > settings.MaxSlope)
                 {
-                    double currHeight = surface.SampleHeight(sx, sz);
-                    double heightDiff = Math.Abs(currHeight - prevHeight);
-                    double sampleDist = length / numSteps; // distance between consecutive samples
-                    double slope = heightDiff / sampleDist;
-
-                    if (slope > settings.MaxSlope)
-                    {
-                        return RoadPlacementResult.Fail(RoadPlacementFailure.TooSteep);
-                    }
-
-                    prevHeight = currHeight;
+                    return RoadPlacementResult.Fail(RoadPlacementFailure.TooSteep);
                 }
+
+                prevHeight = currHeight;
             }
 
             return RoadPlacementResult.Valid;

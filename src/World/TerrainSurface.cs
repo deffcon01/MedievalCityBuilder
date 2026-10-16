@@ -65,6 +65,11 @@ namespace MedievalCityBuilder.World
         /// <returns>A new TerrainSurface centered at world origin.</returns>
         public static TerrainSurface Centered(Heightmap heightmap, double cellSize, double heightScale)
         {
+            if (heightmap == null)
+            {
+                throw new ArgumentNullException(nameof(heightmap), "Heightmap must not be null.");
+            }
+
             double originX = -((heightmap.Width - 1) * cellSize) / 2.0;
             double originZ = -((heightmap.Height - 1) * cellSize) / 2.0;
             return new TerrainSurface(heightmap, cellSize, heightScale, originX, originZ);
