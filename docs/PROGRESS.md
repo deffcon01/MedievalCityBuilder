@@ -1666,3 +1666,92 @@ df7b723 P1-3c-i: Add IRoadBudget
 - A ray that enters the terrain bounds and crosses the surface within one step of the boundary can be missed, because the first in-bounds sample is already below the surface.
 - Rays can skip thin ridges narrower than the step; keep step at most half the cell size.
 - A ray that starts below the surface reports no hit.
+
+---
+
+## Task P1-3c-iii-a — Road Tool Node with Terrain Picking and Ghost Preview
+
+### 2026-10-18 - Implemented RoadTool node with terrain picking and ghost preview
+
+- **What changed**:
+  1. **src/Presentation/TerrainView.cs**: Added `using System;` at top. Added public properties `Surface` (TerrainSurface), `Water` (WaterSettings), and event `WorldApplied`. At end of `ApplyWorld`, after `CurrentWorld = data`, sets `Surface = TerrainSurface.Centered(heightmap, CellSize, HeightScale)`, `Water = data.Water`, then invokes `WorldApplied?.Invoke()`. Both existing GD.Print lines unchanged.
+  2. **src/Presentation/RoadTool.cs** (new file): Partial class `RoadTool : Node3D` in `MedievalCityBuilder.Presentation`. Members:
+     - `Initialize(TerrainView terrain)`: stores terrain, subscribes to `WorldApplied`, builds ghost and label once, calls `ResetForWorld()`, logs exactly "RoadTool: ready (R toggles road tool)".
+     - `ResetForWorld()`: creates new `RoadGraph` and new `RoadPlacementController(graph, terrain.Surface, terrain.Water, RoadPlacementSettings.Default, RoadCostSettings.Default, RoadToolSettings.Default, null)` with comment that budget is null because stockpiles don't exist yet. Hides ghost.
+     - `Active` property (default false). `_UnhandledKeyInput`: toggles `Active` on Key.R (Pressed, not Echo), handles input, updates ghost/label visibility, clears label text when turned off.
+     - Ghost: MeshInstance3D child with SphereMesh (Radius 0.4, Height 0.8), StandardMaterial3D (Unshaded, Alpha transparency, green when valid, red when invalid; one material instance reused, AlbedoColor changed), no shadow casting. Hidden by default.
+     - Label: CanvasLayer with Label at (12,12), MouseFilter Ignore, child of RoadTool. Hidden when inactive.
+     - `_Process`: if inactive returns. Gets camera, mouse position, projects ray. Calls `TerrainRaycaster.TryRaycast(surface, origin, dir, 300.0, 0.5)` with comment about step 0.5 being half default cell size. On miss: hides ghost, label says "No terrain under cursor". On hit: calls `controller.Preview(hit.X, hit.Z)`. If snapped coords inside surface.Contains: places ghost at (SnappedX, surface.SampleHeight(SnappedX, SnappedZ) + 0.6, SnappedZ) in world coordinates, shows it, colors by preview.IsValid. Label text: two lines "Road tool: ON (R to toggle)" and either "Point OK at (x, z)" (one decimal, InvariantCulture) or "Invalid: " + failure (TerrainFailure.ToString() if Terrain, else Failure.ToString()).
+     - Class comments: road tool is presentation only; all rules in src/Roads; clicking, markers, road meshes separate tasks; road graph not saved (lost on F7, N, restart). No mouse button handling, no Click call, does not consume mouse wheel.
+  3. **src/Presentation/Main.cs**: Added private `RoadTool _roadTool = null!` field. At end of `_Ready` (after `ApplyCameraBounds()` and two existing GD.Print lines): creates `_roadTool = new RoadTool { Name = "RoadTool" }`, `AddChild(_roadTool)`, `_roadTool.Initialize(_terrainView)`. F6/F7/N handling unchanged, existing key hint line unchanged.
+
+- **Commands**: 4 commits on `phase1-3c-iii-a-road-tool` (one per numbered item)
+- **Verification Results**:
+  - `./tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:   364, Skipped:     0, Total:   364, Duration: 324 ms
+    ```
+    All 364 tests passed (no new tests expected; presentation code only).
+  - `tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Keys: F6 save, F7 load, N new random world
+    RoadTool: ready (R toggles road tool)
+    Headless run completed successfully!
+    ```
+    - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR". The two original TerrainView log lines are **unchanged**, plus "Main scene loaded", "Keys" hint line, and the new "RoadTool: ready (R toggles road tool)" line are present in order.
+    - **Seed 12345 diagnostic line** (from existing test): `Valid=800, Underwater=99, TooSteep=0, OutOfBounds=0, TooShort=0, Total=899` (unchanged).
+
+- **Manual Checklist (unverified manually)**:
+  - [ ] Press R and a green sphere follows the cursor over land
+  - [ ] Over water it turns red and the label says "Invalid: Underwater"
+  - [ ] Moving the cursor to the sky shows "No terrain under cursor" and hides the sphere
+  - [ ] Pressing R again hides the sphere and label
+  - [ ] WASD, Q/E and the mouse wheel still work with the tool on and off
+  - [ ] Press N, then R, and the sphere still tracks the new terrain
+  - [ ] Press F7 (after F6) and the same
+
+- **KNOWN LIMITATIONS**:
+  - No placing yet (click handling is a separate task)
+  - Roads are not saved (road graph is lost on F7, N, restart)
+  - Camera height does not follow terrain (fixed pivot height)
+
+### Git log --oneline -6
+```
+d110a15 P1-3c-iii-a.3: Main: create and initialize RoadTool
+8c9cccd P1-3c-iii-a.2: Add RoadTool node with terrain picking and ghost preview
+f657e44 P1-3c-iii-a.1: TerrainView: add Surface, Water, WorldApplied event
+b57c9b5 Merge phase1-3c-road-tool: road placement controller
+7aa830b Track Godot .uid files for road controller code
+ab7edab P1-3c-i-fix.3: record verification
+```
+
+### Final Status (Task P1-3c-iii-a)
+- **Done**: All 4 scope items implemented and verified.
+  1. TerrainView: Surface, Water, WorldApplied event added
+  2. RoadTool.cs created with terrain picking and ghost preview
+  3. Main.cs creates and initializes RoadTool
+  4. Build, tests (364 passed), and headless run all pass
+- **Verified**: 
+  - `tools/build.ps1` → `Build succeeded!`
+  - `dotnet test tests/MedievalCityBuilder.Tests` → 364 tests passed
+  - `tools/run-headless.ps1` → All required log lines present in order, zero WARNING/ERROR lines
+- **Blocked**: None.
+- **Next**: Phase 1.3 — Click handling for road placement, road meshes, node markers, saving road graph.
+- **Reminder**: "Player road drawing" in TODO.md is NOT checked off yet (click handling, meshes, saving are separate tasks).
+
+## Manual verification (user, F5)
+Phase 1.3c-iii-a road tool: R toggles the tool, the ghost sphere follows the cursor over land and turns red over water with the label showing the reason, the sphere hides over sky and when the tool is toggled off, camera controls work with the tool on and off, and behaviour holds after N and F7. Verified manually on 2026-10-15. Result: pass.
