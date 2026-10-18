@@ -1408,4 +1408,104 @@ Phase 1.2 save/load: N generated new terrain each press; F7 before any save logg
  -   * * B l o c k e d * * :   N o n e . 
  -   * * N e x t * * :   R e m a i n i n g   i t e m s   i n   T O D O . m d . 
   
- 
+ ---
+
+## Phase 1-3c-i — Road Placement Controller (Plain C#, No Godot)
+
+### 2026-10-18 - Implemented RoadToolSettings, IRoadBudget, RoadToolResult, RoadPlacementController and comprehensive tests
+
+- **What changed**:
+  1. Created `src/Roads/RoadToolSettings.cs`: immutable record with `SnapRadius` (double, world units, >= 0, finite) and `ContinueChain` (bool). Constructor throws `ArgumentOutOfRangeException` for invalid SnapRadius. Static `Default` with SnapRadius 1.5 and ContinueChain true, each commented as PLACEHOLDER pending playtesting.
+  2. Created `src/Roads/IRoadBudget.cs`: public interface `IRoadBudget { bool CanAfford(RoadCost cost); bool TrySpend(RoadCost cost); }` with comments: `TrySpend` must deduct and return true only when the full cost is affordable, otherwise return false and change nothing. A null budget in the controller means roads are free (stockpiles are not implemented yet).
+  3. Created `src/Roads/RoadToolResult.cs`: enum `RoadToolFailure { None, SameNode, Terrain, DuplicateSegment, InsufficientFunds }` plus `RoadToolResult` readonly record struct with `Success`, `Failure`, `TerrainFailure`, `Cost`, `StartNode`, `EndNode`, `Segment`. Static helpers `Ok(...)` and `Fail(...)`. For first click, successful result has Cost = RoadCost.Zero and no segment. Added `RoadToolPreview` record struct with `IsValid`, `Failure`, `TerrainFailure`, `Cost`, `Length`, `SnappedX`, `SnappedZ`, `HasPendingStart`.
+  4. Created `src/Roads/RoadPlacementController.cs`: public sealed class. Constructor `(RoadGraph graph, TerrainSurface surface, WaterSettings water, RoadPlacementSettings placement, RoadCostSettings cost, RoadToolSettings tool, IRoadBudget? budget)`; `ArgumentNullException` for each non-nullable argument. Public members: `HasPendingStart`, `PendingStartX`, `PendingStartZ` (throw `InvalidOperationException` when no pending start), `PendingStartNode` (null when start is free point), `Cancel()` (clears pending start, never touches graph), `Preview(x,z)`, `Click(x,z)`.
+  5. Behavior implemented:
+     - **SNAPPING**: finds existing graph node nearest to (x,z) within SnapRadius (inclusive); ties go to lowest node id; linear scan over `graph.Nodes` with comment about spatial index optimization. NaN/infinite x/z never snaps, treated as invalid point (Terrain failure OutOfBounds).
+     - **NO PENDING START, Click**: validates effective point with `RoadPlacementValidator.ValidateNode`. Invalid: `Fail(Terrain, failure)` no change. Valid: sets pending start (remembers snapped node id or free point), returns Success with Cost Zero. Graph NOT modified by first click.
+     - **WITH PENDING START, Click**: computes effective end point (snaps as above). Same existing node as pending start -> `Fail(SameNode)`. `ValidateSegment` with start/end coords; invalid -> `Fail(Terrain, failure)`. Both endpoints existing nodes and segment exists -> `Fail(DuplicateSegment)`. Computes cost with `RoadCostCalculator.GetSegmentCost`. Budget `TrySpend(cost)` returns false -> `Fail(InsufficientFunds)`. ONLY after all checks pass and payment succeeds: mutate graph (AddNode for free start/end, AddSegment). If `ContinueChain` true, new end becomes pending start, else cleared. All validation before payment/mutation, so failure never leaves partial state.
+     - **Preview**: same checks but NEVER mutates graph, pending start, or budget (uses `CanAfford`, not `TrySpend`). No pending start validates node; with pending start validates segment, duplicate, affordability. Reports Cost and Length (0 and Zero when no pending start). SnappedX/Z are effective point after snapping. HasPendingStart reflects current state. Out of bounds point reports raw input.
+     - **Preview and Click agree**: same inputs give same validity, failure, and cost.
+  6. Created `tests/MedievalCityBuilder.Tests/RoadPlacementControllerTests.cs`: comprehensive test suite with:
+     - FakeBudget test class implementing IRoadBudget with gold/stone balance, successful spends list, CanAfford/TrySpend call counters
+     - 23 test methods covering all requirements:
+       - Settings: negative, NaN, infinite SnapRadius throw; Default values; null constructor arguments
+       - First click valid/invalid/underwater
+       - Two clicks 5 units apart: node count 2, segment count 1, correct cost, pending start chain
+       - ContinueChain false clears pending start
+       - Chain of 4 clicks: 3 segments, connected via GetSegmentsAt
+       - Snapping: reuse existing node, no snap outside radius, inclusive at boundary, tie-breaking lowest id, radius 0 exact match
+       - Connection: build segment, start at snapped A, click near new C, click near B -> connected as expected
+       - SameNode fail
+       - DuplicateSegment fail, budget untouched
+       - TooShort and Underwater fail, no spend
+       - Budget: too small fails, exact balance succeeds, balance drops by cost, spend recorded, null budget free
+       - Cancel clears pending start, no throw when no pending start
+       - Preview never mutates: node/segment counts, pending state, budget counters unchanged, TrySpend calls stay 0
+       - Preview/Click agreement for 20 mixed points
+       - Preview reports Length and Cost matching calculator
+       - NaN/infinite coordinates return Terrain OutOfBounds, never throw
+       - FUZZ: DeterministicRandom(4242), 2000 random actions (Click in-bounds/out-of-bounds, Cancel 1/10). After EVERY action: graph invariants (endpoints exist, A<B, segment count = successful placements, node count = distinct nodes, budget balance = start - sum spends, never negative). At least 10 segments placed, at least one InsufficientFunds. Same seed gives identical final graph.
+       - Determinism: same sequence on two fresh controllers gives equal results
+
+- **Commands**: 4 commits on `phase1-3c-road-tool`
+  - `504e22c P1-3c-i: Add RoadToolSettings`
+  - `df7b723 P1-3c-i: Add IRoadBudget`
+  - `8b87e29 P1-3c-ii: Add RoadPlacementController and RoadToolResult`
+  - `76a6761 P1-3c-iii: Add comprehensive unit tests for RoadPlacementController`
+
+- **Verification Results**:
+
+#### `tools/build.ps1` output:
+```
+Building MedievalCityBuilder...
+Build succeeded!
+```
+
+#### `dotnet test tests/MedievalCityBuilder.Tests` output:
+```
+Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+Passed!  - Failed:     0, Passed:   309, Skipped:     0, Total:   309, Duration: 234 ms
+```
+(Total test suite: 23 new + 286 previous = 309 tests; all passing)
+
+#### `tools/run-headless.ps1` output:
+```
+Running MedievalCityBuilder in headless mode...
+Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+Project: .
+Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+MedievalCityBuilder: Main scene loaded
+Keys: F6 save, F7 load, N new random world
+Headless run completed successfully!
+```
+- **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. The two original TerrainView and WaterPlane log lines are unchanged, plus "Main scene loaded" and Keys hint lines.
+- **Diagnostic counts for seed 12345 terrain** (from existing test): `Valid=800, Underwater=99, TooSteep=0, OutOfBounds=0, TooShort=0, Total=899` (unchanged)
+
+- **Note**: This task covers the placement logic only. Scene input, ghost preview meshes, road meshes, segment splitting and saving the road graph are separate tasks. Do NOT check off "Player road drawing" yet; it needs scene work.
+
+### Git Log (phase1-3c-road-tool)
+```
+76a6761 P1-3c-iii: Add comprehensive unit tests for RoadPlacementController
+8b87e29 P1-3c-ii: Add RoadPlacementController and RoadToolResult
+df7b723 P1-3c-i: Add IRoadBudget
+504e22c P1-3c-i: Add RoadToolSettings
+5f15be3 Merge phase1-3b-road-cost: road cost and upkeep calculator
+5129990 P1-3b-fix: avoid overflow in upkeep ceiling division; add regression tests
+```
+
+### Final Status (Phase 1-3c-i)
+- **Done**: All 4 scope items implemented and verified.
+  1. Three small files: RoadToolSettings, IRoadBudget, RoadToolResult
+  2. RoadPlacementController with full click/preview logic
+  3. Comprehensive test suite (23 tests including FUZZ and determinism)
+  4. Build, test, headless verification all pass
+- **Verified**: 
+  - `tools/build.ps1` -> `Build succeeded!`
+  - `dotnet test tests/MedievalCityBuilder.Tests` -> 309 tests passed (0 failed)
+  - `tools/run-headless.ps1` -> Scene loads, prints TerrainView/WaterPlane/Main/Keys lines, exits 0, **zero WARNING/ERROR lines**
+- **Blocked**: None.
+- **Next**: Phase 1.3 -- Scene input for road drawing, ghost preview meshes, road meshes, segment splitting, saving road graph.
+- **Reminder**: "Player road drawing" in TODO.md is NOT checked off yet (needs scene work).
