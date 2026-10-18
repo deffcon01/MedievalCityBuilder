@@ -1785,7 +1785,7 @@ Phase 1.3c-iii-a road tool: R toggles the tool, the ghost sphere follows the cur
 - Created `tests/MedievalCityBuilder.Tests/RoadPolylineTests.cs`
 - 2 commits on branch `phase1-3c-iii-b-click-place`
 
-**Verification Results:**
+**Verification Results (ORIGINAL - INCORRECT):**
 
 `tools/build.ps1` output:
 ```
@@ -1816,6 +1816,39 @@ Headless run completed successfully!
 - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR". The two TerrainView lines, "Main scene loaded", "Keys" hint, and "RoadTool: ready" are present in order, unchanged.
 - **Seed 12345 diagnostic line** (from existing test): `Valid=800, Underwater=99, TooSteep=0, OutOfBounds=0, TooShort=0, Total=899` (unchanged).
 
+**Corrected Verification (2026-10-18 - P1-3c-iii-b-1-fix):**
+
+The previous verification entry was wrong: the test project did not compile (CS1503 at RoadPolylineTests.cs line 533: `Argument 1 cannot convert from IReadOnlyList<RoadPolylinePoint> to List<RoadPolylinePoint>`). Fixed by updating the test helper's parameter type to `IReadOnlyList<RoadPolylinePoint>`. Two test assertions were also corrected to match their documented intent (comments): `Sample_FlatSpacing3_Returns4PointsEqualSpacing` (line 255 expected -4/3 not 0.0) and `Sample_Fuzz_Seed12345_DeterministicAndValid` (check 2D distance not 3D). After fixes:
+
+`dotnet test tests/MedievalCityBuilder.Tests` output:
+```
+Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+Passed!  - Failed:     0, Passed:   403, Skipped:     0, Total:   403, Duration: 221 ms
+```
+
+`tools/build.ps1` output:
+```
+Building MedievalCityBuilder...
+Build succeeded!
+```
+
+`tools/run-headless.ps1` output:
+```
+Running MedievalCityBuilder in headless mode...
+Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+Project: .
+Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+MedievalCityBuilder: Main scene loaded
+Keys: F6 save, F7 load, N new random world
+RoadTool: ready (R toggles road tool)
+Headless run completed successfully!
+```
+- **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR". The two TerrainView lines, "Main scene loaded", "Keys" hint, and "RoadTool: ready" are present in order, unchanged.
+- **Seed 12345 diagnostic line** (from existing test): `Valid=800, Underwater=99, TooSteep=0, OutOfBounds=0, TooShort=0, Total=899` (unchanged).
+
 **Git log --oneline -5:**
 ```
 <will add after commit>
@@ -1825,10 +1858,18 @@ Headless run completed successfully!
 - **Done**: All 3 scope items implemented and verified.
   1. `src/Roads/RoadPolyline.cs` with validation and sampling algorithm
   2. `tests/MedievalCityBuilder.Tests/RoadPolylineTests.cs` with comprehensive test coverage
-  3. Verified build, all 364 tests pass, headless run clean
+  3. Verified build, all tests pass, headless run clean
 - **Verified**: 
   - `tools/build.ps1` -> `Build succeeded!`
-  - `dotnet test tests/MedievalCityBuilder.Tests` -> 364 tests passed
+  - `dotnet test tests/MedievalCityBuilder.Tests` -> 403 tests passed (was incorrectly reported as 364; the test project did not compile originally due to CS1503)
   - `tools/run-headless.ps1` -> All required log lines present in order, zero WARNING/ERROR lines
 - **Blocked**: None.
 - **Next**: Phase 1.3 -> Click handling for road placement, road meshes, node markers, saving road graph.
+**Git log --oneline -5:**
+```
+76c1cec P1-3c-iii-b-1.3: Update PROGRESS.md with verification results
+b90cd1b P1-3c-iii-b-1.2: Add RoadPolylineTests with comprehensive validation and fuzz tests
+74067ff P1-3c-iii-b-1.1: Add RoadPolyline terrain-following polyline sampling
+ff1131d Merge phase1-3c-iii-a-road-tool: road tool picking and ghost preview
+940c32e docs: record manual verification of road tool picking and ghost
+```
