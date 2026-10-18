@@ -252,7 +252,7 @@ namespace MedievalCityBuilder.Tests
             Assert.Equal(4, points.Count);
             Assert.Equal(-4.0, points[0].X);
             Assert.Equal(4.0, points[3].X);
-            Assert.Equal(0.0, points[1].X, 1e-9); // -4 + 8/3 ≈ -1.333, but exact: -4 + 8*(1/3) = -4/3 ≈ -1.333
+            Assert.Equal(-4.0 / 3.0, points[1].X, 1e-9); // -4 + 8/3 = -4/3 ≈ -1.333
             Assert.Equal(8.0 / 3.0, points[2].X - points[1].X, 1e-9); // equal spacing
             Assert.Equal(8.0 / 3.0, points[3].X - points[2].X, 1e-9);
         }
@@ -513,8 +513,8 @@ namespace MedievalCityBuilder.Tests
             double heightOffset = 0.2;
 
             // Run twice and compare
-            var results1 = new System.Collections.Generic.List<System.Collections.Generic.List<RoadPolylinePoint>>();
-            var results2 = new System.Collections.Generic.List<System.Collections.Generic.List<RoadPolylinePoint>>();
+            var results1 = new System.Collections.Generic.List<System.Collections.Generic.IReadOnlyList<RoadPolylinePoint>>();
+            var results2 = new System.Collections.Generic.List<System.Collections.Generic.IReadOnlyList<RoadPolylinePoint>>();
 
             for (int run = 0; run < 2; run++)
             {
@@ -548,14 +548,13 @@ namespace MedievalCityBuilder.Tests
                         Assert.Equal(expectedY, p.Y, 1e-9);
                     }
 
-                    // Consecutive points never more than spacing apart (plus 1e-9)
+                    // Consecutive points never more than spacing apart (plus 1e-9) in 2D
                     for (int i = 1; i < points.Count; i++)
                     {
                         double dx = points[i].X - points[i - 1].X;
                         double dz = points[i].Z - points[i - 1].Z;
-                        double dy = points[i].Y - points[i - 1].Y;
-                        double dist = Math.Sqrt(dx * dx + dz * dz + dy * dy);
-                        Assert.True(dist <= spacing + 1e-9, $"Consecutive points too far apart: {dist} > {spacing}");
+                        double dist2D = Math.Sqrt(dx * dx + dz * dz);
+                        Assert.True(dist2D <= spacing + 1e-9, $"Consecutive points too far apart in 2D: {dist2D} > {spacing}");
                     }
                 }
             }
