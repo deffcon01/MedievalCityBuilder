@@ -803,6 +803,91 @@ c3a19a4 Merge phase1-2d-water: sea-level water plane
 
 ---
 
+## P1-3c-ii — Terrain Raycaster (Plain C#, No Godot)
+
+### 2026-10-18 - Implemented TerrainRaycaster and TerrainRayHit
+
+- **What changed**:
+  1. Created `src/World/TerrainRayHit.cs`: public readonly record struct with X, Y, Z, Distance (double). Uses same world coordinate system as TerrainSurface.
+  2. Created `src/World/TerrainRaycaster.cs`: static class with `TryRaycast(TerrainSurface surface, double originX, originY, originZ, dirX, dirY, dirZ, double maxDistance, double step, out TerrainRayHit hit)`.
+     - Validation throws before any work: null surface → ArgumentNullException; origin/direction NaN/infinite → ArgumentOutOfRangeException; direction length < 1e-12 → ArgumentException; maxDistance/step NaN/infinite/<=0 → ArgumentOutOfRangeException; maxDistance/step > 1,000,000 → ArgumentOutOfRangeException (protects against huge loops).
+     - Algorithm: normalizes direction; walks steps with t = min(i*step, maxDistance); tracks prevT, prevF, prevInBounds.
+     - If point outside bounds: prevInBounds = false, continue.
+     - f = p.Y - surface.SampleHeight(p.X, p.Z).
+     - If f == 0: hit at t.
+     - If f < 0 and prevInBounds and prevF >= 0: bisection (50 iterations, lo above/on, hi below), midpoint t hit.
+     - If f < 0 and not prevInBounds: return false (ray starts/enters below surface → no hit).
+     - Otherwise (f > 0): update prev and continue.
+     - Hit: X,Z from ray at final t (clamped to surface bounds), Y = surface.SampleHeight(X,Z), Distance = final t.
+     - Class comment: same world coordinate system as TerrainSurface; step ≤ half cell size to avoid skipping ridges; ray exactly on surface hits at first in-bounds sample; pure and deterministic.
+  3. Created `tests/MedievalCityBuilder.Tests/TerrainRaycasterTests.cs`: 50 tests covering:
+     - Validation: null surface, NaN/infinite in all 6 origin/direction components, zero direction, NaN/infinite/zero/negative maxDistance/step, maxDistance/step > 1M.
+     - Flat 9x9 heightmap (value 0.5, cellSize 1, heightScale 10 → extents -4..4, height 5.0):
+       - Vertical down from (0,15,0) hits (0,5,0) distance 10.
+       - Scaled direction (0,-2,0) gives same hit.
+       - Diagonal from (-4,9,0) direction (1,-1,0) hits (0,5,0) distance 4√2.
+       - Enters from outside (-20,25,0) direction (1,-1,0) hits (0,5,0).
+     - Ramp 5x5 (value = 0.25*x, cellSize 2, heightScale 4, Centered → world height = 0.5*(x+4)):
+       - From (1,10,0) direction (0,-1,0) hits Y=2.5.
+       - From (-3,10,0) hits Y=0.5.
+       - From (4,10,0) hits Y=4.0.
+       - From (-4,10,-4) hits Y=0.0.
+     - No hit: horizontal above, pointing up, outside bounds straight down, start below surface, maxDistance too short, enters bounds below surface.
+     - Ray on flat surface (origin (-4,5,0), direction (1,0,0)) hits at distance 0.
+     - Hit Y equals surface.SampleHeight(X,Z) within 1e-9.
+     - Hit point equals origin + normalized dir * Distance in X,Z within 1e-6.
+     - Determinism: same call twice gives equal results.
+     - Fuzz: DeterministicRandom(2024), terrain from seed 12345, GeneratorVersion 1, TerrainSettings.Default, 64x64, Centered(1.0, 10.0). 2000 rays: origin x,z in [MinX-10, MaxX+10], origin y in [10,40]; dir x,z in [-1,1], dir y in [-1,-0.1]; maxDistance 200, step 0.5. Assert for every hit: Distance ∈ [0,200], Y = SampleHeight(X,Z) ±1e-6, hit point = origin + normDir*Distance in X,Z ±1e-6. At least 500 hits, at least 100 misses. Run twice → identical hit lists.
+
+- **Commands**: 3 commits on `phase1-3c-ii-raycast`
+  - `src/World/TerrainRayHit.cs`
+  - `src/World/TerrainRaycaster.cs`
+  - `tests/MedievalCityBuilder.Tests/TerrainRaycasterTests.cs`
+
+- **Verification Results**:
+  - `./tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:   364, Skipped:     0, Total:   364, Duration: 240 ms
+    ```
+    (Total test suite: 50 new + 314 previous = 364 tests)
+  - `./tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Keys: F6 save, F7 load, N new random world
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. The two required TerrainView and WaterPlane log lines are present, plus "Main scene loaded" and the Keys hint line.
+
+- **Notes**: 
+  - Raycaster covers the terrain surface only; picking buildings or road nodes is separate.
+  - Step must be at most half the cell size.
+  - All 314 existing tests pass; no warnings from src/World.
+  - The seed 12345 diagnostic line (Valid=800, Underwater=99, TooSteep=0, OutOfBounds=0, TooShort=0, Total=899) is unchanged from the original run (that line appears in full game run with settlement validation, not in headless which quits after 5 seconds).
+
+### Git Log
+```
+b57c9b5 Merge phase1-3c-road-tool: road placement controller
+7aa830b Track Godot .uid files for road controller code
+ab7edab P1-3c-i-fix.3: record verification
+da0f9e4 P1-3c-i-fix.2: tests for stale pending start
+58f3305 P1-3c-i-fix.1: live pending start node; drop AreConnected from Preview
+```
+
+---
+
 ## Phase 1-3a — RoadGraph: Fix Warnings and Add Adjacency Index
 
 ### 2026-10-14 - Fixed CS8601 warnings and added adjacency index
@@ -1410,7 +1495,7 @@ Phase 1.2 save/load: N generated new terrain each press; F7 before any save logg
   
  ---
 
-## Phase 1-3c-i � Road Placement Controller (Plain C#, No Godot)
+## Phase 1-3c-i � Road Placement Controller (Plain C#, No Godot)
 
 ### 2026-10-18 - Implemented RoadToolSettings, IRoadBudget, RoadToolResult, RoadPlacementController and comprehensive tests
 
