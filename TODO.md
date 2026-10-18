@@ -32,7 +32,7 @@
 - [ ] Player road drawing.
 - [x] Terrain validity.
 - [ ] Entrance snapping.
-- [ ] Basic stone/gold cost.
+- [x] Basic stone/gold cost.
 
 ### 1.4 Zoning
 - [ ] Zone brush.
