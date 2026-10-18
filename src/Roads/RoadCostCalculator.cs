@@ -161,14 +161,14 @@ namespace MedievalCityBuilder.Roads
             }
 
             // extra = ceil(baseUpkeep * UsageUpkeepPercent * usagePoints / 100)
-            // Using integer ceiling division: (numerator + 99) / 100 for positive numerator.
+            // Integer ceiling division written to avoid overflow: numerator / 100, plus 1 if there is a remainder.
             long numerator;
             checked
             {
                 numerator = baseUpkeep * settings.UsageUpkeepPercent * usagePoints;
             }
 
-            long extra = (numerator + 99) / 100;
+            long extra = numerator / 100 + (numerator % 100 != 0 ? 1L : 0L);
 
             long totalUpkeep;
             checked
