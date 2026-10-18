@@ -730,5 +730,181 @@ namespace MedievalCityBuilder.Tests
             Assert.Equal(g1.NodeCount, g2.NodeCount);
             Assert.Equal(g1.SegmentCount, g2.SegmentCount);
         }
+
+        [Fact]
+        public void StalePendingStart_ClickSuccess_RecreatesNodeAndSpends()
+        {
+            var hm = CreateFlatHeightmap(33, 33, 0.5f);
+            var surface = TerrainSurface.Centered(hm, 1.0, 10.0);
+            var water = new WaterSettings(0.35);
+
+            var graph = new RoadGraph();
+            var budget = new FakeBudget(1000, 1000);
+            var controller = new RoadPlacementController(graph, surface, water, RoadPlacementSettings.Default, RoadCostSettings.Default, RoadToolSettings.Default, budget);
+
+            var r1 = controller.Click(0.0, 0.0); // A
+            var r2 = controller.Click(5.0, 0.0); // B
+            Assert.True(r2.Success);
+            Assert.True(controller.HasPendingStart);
+            var nodeBId = controller.PendingStartNode;
+            Assert.NotNull(nodeBId);
+            var nodeBObj = graph.GetNode(nodeBId!.Value);
+            Assert.NotNull(nodeBObj);
+            double bX = nodeBObj!.X;
+            double bZ = nodeBObj.Z;
+
+            // Remove B's segment and then B's node directly from the graph
+            var segmentsAtB = graph.GetSegmentsAt(nodeBId.Value);
+            foreach (var seg in segmentsAtB)
+            {
+                graph.RemoveSegment(seg.Id);
+            }
+            graph.RemoveNode(nodeBId.Value);
+
+            // Now pending start is stale (node removed), but HasPendingStart is true, PendingStartNode is null.
+            Assert.True(controller.HasPendingStart);
+            Assert.Null(controller.PendingStartNode);
+            Assert.Equal(bX, controller.PendingStartX);
+            Assert.Equal(bZ, controller.PendingStartZ);
+
+            int spendsBefore = budget.SuccessfulSpends.Count;
+            var expectedCost = RoadCostCalculator.GetSegmentCost(RoadCostSettings.Default, 5.0);
+
+            // Preview at a valid point 5 units away does not throw and reports valid with expected cost.
+            var preview = controller.Preview(bX + 5.0, bZ);
+            Assert.True(preview.IsValid);
+            Assert.Equal(expectedCost, preview.Cost);
+
+            int nodesBefore = graph.NodeCount; // node A is still there (1 node)
+
+            // Click at that point succeeds, creates a new node at B's old coordinates plus the new end node and one segment
+            var r3 = controller.Click(bX + 5.0, bZ);
+            Assert.True(r3.Success);
+            Assert.NotNull(r3.StartNode);
+            Assert.NotNull(r3.EndNode);
+            Assert.NotNull(r3.Segment);
+            Assert.Equal(1, graph.SegmentCount);
+            Assert.Equal(nodesBefore + 2, graph.NodeCount); // created new node at B's old coords + new end node
+
+            var recreatedStartNode = graph.GetNode(r3.StartNode!.Value);
+            Assert.NotNull(recreatedStartNode);
+            Assert.Equal(bX, recreatedStartNode!.X);
+            Assert.Equal(bZ, recreatedStartNode.Z);
+
+            // Budget shows exactly one additional spend of that cost
+            Assert.Equal(spendsBefore + 1, budget.SuccessfulSpends.Count);
+            Assert.Equal(expectedCost, budget.SuccessfulSpends[^1]);
+        }
+
+        [Fact]
+        public void StalePendingStart_BudgetTooSmall_ClickReturnsInsufficientFunds()
+        {
+            var hm = CreateFlatHeightmap(33, 33, 0.5f);
+            var surface = TerrainSurface.Centered(hm, 1.0, 10.0);
+            var water = new WaterSettings(0.35);
+
+            var graph = new RoadGraph();
+            var smallBudget = new FakeBudget(10, 5); // can afford first segment (cost 10 gold, 5 stone)
+            var controller = new RoadPlacementController(graph, surface, water, RoadPlacementSettings.Default, RoadCostSettings.Default, RoadToolSettings.Default, smallBudget);
+
+            controller.Click(0.0, 0.0);
+            var r2 = controller.Click(5.0, 0.0);
+            Assert.True(r2.Success);
+            var nodeBId = controller.PendingStartNode!.Value;
+            var bX = controller.PendingStartX;
+            var bZ = controller.PendingStartZ;
+
+            // Budget balance is now 0 gold, 0 stone, so subsequent click will not be affordable
+            foreach (var seg in graph.GetSegmentsAt(nodeBId)) graph.RemoveSegment(seg.Id);
+            graph.RemoveNode(nodeBId);
+
+            long goldBefore = smallBudget.Gold;
+            long stoneBefore = smallBudget.Stone;
+            int segCountBefore = graph.SegmentCount;
+            int nodeCountBefore = graph.NodeCount;
+
+            var res = controller.Click(bX + 5.0, bZ);
+            Assert.False(res.Success);
+            Assert.Equal(RoadToolFailure.InsufficientFunds, res.Failure);
+            Assert.Equal(segCountBefore, graph.SegmentCount);
+            Assert.Equal(nodeCountBefore, graph.NodeCount);
+            Assert.Equal(goldBefore, smallBudget.Gold);
+            Assert.Equal(stoneBefore, smallBudget.Stone);
+        }
+
+        [Fact]
+        public void StalePendingStart_Cancel_HasPendingStartFalse()
+        {
+            var hm = CreateFlatHeightmap(33, 33, 0.5f);
+            var surface = TerrainSurface.Centered(hm, 1.0, 10.0);
+            var water = new WaterSettings(0.35);
+
+            var graph = new RoadGraph();
+            var controller = new RoadPlacementController(graph, surface, water, RoadPlacementSettings.Default, RoadCostSettings.Default, RoadToolSettings.Default, null);
+
+            controller.Click(0.0, 0.0);
+            controller.Click(5.0, 0.0);
+            var nodeBId = controller.PendingStartNode!.Value;
+
+            foreach (var seg in graph.GetSegmentsAt(nodeBId)) graph.RemoveSegment(seg.Id);
+            graph.RemoveNode(nodeBId);
+
+            Assert.True(controller.HasPendingStart);
+            controller.Cancel();
+            Assert.False(controller.HasPendingStart);
+        }
+
+        [Fact]
+        public void StalePendingStart_PendingStartNodeReturnsNull_CoordinatesPreserved()
+        {
+            var hm = CreateFlatHeightmap(33, 33, 0.5f);
+            var surface = TerrainSurface.Centered(hm, 1.0, 10.0);
+            var water = new WaterSettings(0.35);
+
+            var graph = new RoadGraph();
+            var controller = new RoadPlacementController(graph, surface, water, RoadPlacementSettings.Default, RoadCostSettings.Default, RoadToolSettings.Default, null);
+
+            controller.Click(1.0, 2.0);
+            controller.Click(6.0, 2.0);
+            var nodeBId = controller.PendingStartNode!.Value;
+            double oldX = controller.PendingStartX;
+            double oldZ = controller.PendingStartZ;
+
+            foreach (var seg in graph.GetSegmentsAt(nodeBId)) graph.RemoveSegment(seg.Id);
+            graph.RemoveNode(nodeBId);
+
+            Assert.True(controller.HasPendingStart);
+            Assert.Null(controller.PendingStartNode);
+            Assert.Equal(oldX, controller.PendingStartX);
+            Assert.Equal(oldZ, controller.PendingStartZ);
+        }
+
+        [Fact]
+        public void DuplicateDetection_StillWorks_FailsDuplicateSegmentZeroSpends()
+        {
+            var hm = CreateFlatHeightmap(33, 33, 0.5f);
+            var surface = TerrainSurface.Centered(hm, 1.0, 10.0);
+            var water = new WaterSettings(0.35);
+
+            var graph = new RoadGraph();
+            var budget = new FakeBudget(1000, 1000);
+            var controller = new RoadPlacementController(graph, surface, water, RoadPlacementSettings.Default, RoadCostSettings.Default, RoadToolSettings.Default, budget);
+
+            controller.Click(0.0, 0.0); // A
+            var rAB = controller.Click(5.0, 0.0); // B
+            var nodeA = rAB.StartNode!.Value;
+            var nodeB = rAB.EndNode!.Value;
+
+            controller.Cancel();
+            int trySpendBefore = budget.TrySpendCalls;
+
+            // Start at A, click near B
+            controller.Click(0.1, 0.1); // snaps to A
+            var rDup = controller.Click(4.9, 0.1); // snaps to B
+
+            Assert.False(rDup.Success);
+            Assert.Equal(RoadToolFailure.DuplicateSegment, rDup.Failure);
+            Assert.Equal(trySpendBefore, budget.TrySpendCalls);
+        }
     }
 }
