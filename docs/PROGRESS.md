@@ -1661,3 +1661,8 @@ df7b723 P1-3c-i: Add IRoadBudget
 - **Verified**: Build succeeds; 314 tests pass; headless run clean with all required log lines, zero WARNING/ERROR lines; diagnostic counts unchanged.
 - **Blocked**: None.
 - **Next**: Phase 1.3 — Scene input for road drawing, ghost preview meshes, road meshes, segment splitting, saving road graph.
+
+## Known limitations (raycaster)
+- A ray that enters the terrain bounds and crosses the surface within one step of the boundary can be missed, because the first in-bounds sample is already below the surface.
+- Rays can skip thin ridges narrower than the step; keep step at most half the cell size.
+- A ray that starts below the surface reports no hit.
