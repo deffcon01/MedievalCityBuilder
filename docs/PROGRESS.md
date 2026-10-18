@@ -1509,3 +1509,70 @@ df7b723 P1-3c-i: Add IRoadBudget
 - **Blocked**: None.
 - **Next**: Phase 1.3 -- Scene input for road drawing, ghost preview meshes, road meshes, segment splitting, saving road graph.
 - **Reminder**: "Player road drawing" in TODO.md is NOT checked off yet (needs scene work).
+## Task P1-3c-i-fix – Stale pending start tests
+
+### 2026-10-18 - Added 5 tests for stale pending start scenarios
+
+- **What changed**:
+  1. `tests/MedievalCityBuilder.Tests/RoadPlacementControllerTests.cs`: Added 5 new test methods:
+     - `StalePendingStart_ClickSuccess_RecreatesNodeAndSpends`: Click A, click B (chain), remove B's segment and node from graph, preview at valid point 5 units away reports valid with expected cost, click succeeds creating new node at B's old coordinates + new end node + one segment, budget shows exactly one additional spend.
+     - `StalePendingStart_BudgetTooSmall_ClickReturnsInsufficientFunds`: Same stale setup but budget too small; Click returns InsufficientFunds, graph unchanged, balance unchanged.
+     - `StalePendingStart_Cancel_HasPendingStartFalse`: Stale pending start then Cancel -> HasPendingStart false, no exception.
+     - `StalePendingStart_PendingStartNodeReturnsNull_CoordinatesPreserved`: After node removed, PendingStartNode returns null while HasPendingStart is true and PendingStartX/PendingStartZ return old coordinates.
+     - `DuplicateDetection_StillWorks_FailsDuplicateSegmentZeroSpends`: Segment A-B exists, start at A, click near B -> fails DuplicateSegment with zero TrySpend calls.
+
+- **Commands**:
+  - `git add tests/MedievalCityBuilder.Tests/RoadPlacementControllerTests.cs; git commit -m "P1-3c-i-fix.2: tests for stale pending start"`
+  - `git add docs/PROGRESS.md; git commit -m "P1-3c-i-fix.3: record verification"`
+  - `./tools/build.ps1`
+  - `dotnet test tests/MedievalCityBuilder.Tests`
+  - `powershell -File tools/run-headless.ps1`
+
+- **Verification Results**:
+  - `./tools/build.ps1` output:
+    ```
+    Building MedievalCityBuilder...
+    Build succeeded!
+    ```
+  - `dotnet test tests/MedievalCityBuilder.Tests` output:
+    ```
+    Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+    Passed!  - Failed:     0, Passed:   314, Skipped:     0, Total:   314, Duration: 219 ms
+    ```
+    Total: 314 tests passed (309 existing + 5 new). No warnings from src/Roads.
+  - Diagnostic seed 12345 test:
+    ```
+    Diagnostic counts for seed 12345: Valid=800, Underwater=99, TooSteep=0, OutOfBounds=0, TooShort=0, Total=899
+    ```
+    Counts unchanged.
+  - `tools/run-headless.ps1` output:
+    ```
+    Running MedievalCityBuilder in headless mode...
+    Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+    Project: .
+    Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Keys: F6 save, F7 load, N new random world
+    Headless run completed successfully!
+    ```
+    - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR". The two original TerrainView log lines are unchanged, plus "Main scene loaded" and "Keys" hint lines.
+  - **Git log --oneline -4**:
+    ```
+    <new commit> P1-3c-i-fix.3: record verification
+    <new commit> P1-3c-i-fix.2: tests for stale pending start
+    76a6761 P1-3c-iii: Add comprehensive unit tests for RoadPlacementController
+    8b87e29 P1-3c-ii: Add RoadPlacementController and RoadToolResult
+    ```
+
+### KNOWN LIMITATIONS (updated)
+- Segments that cross mid-span do not create a junction; a click on the middle of an existing segment does not split it.
+- RoadGraph.Nodes copies the node list on every access, so snapping allocates on each preview.
+
+### Final Status (P1-3c-i-fix)
+- **Done**: All 5 tests implemented and verified.
+- **Verified**: Build succeeds; 314 tests pass; headless run clean with all required log lines, zero WARNING/ERROR lines; diagnostic counts unchanged.
+- **Blocked**: None.
+- **Next**: Phase 1.3 — Scene input for road drawing, ghost preview meshes, road meshes, segment splitting, saving road graph.
