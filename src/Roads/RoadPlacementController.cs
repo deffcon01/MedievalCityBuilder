@@ -81,8 +81,30 @@ namespace MedievalCityBuilder.Roads
 
         /// <summary>
         /// The node ID of the pending start point, or null if it is a free point not yet in the graph.
+        /// If the stored node was removed from the graph (e.g. by demolition), returns null even though
+        /// HasPendingStart is still true; the pending start then behaves as a free point at the
+        /// stored PendingStartX / PendingStartZ coordinates.
         /// </summary>
-        public RoadNodeId? PendingStartNode => _hasPendingStart ? _pendingStartNode : null;
+        public RoadNodeId? PendingStartNode => GetLivePendingStartNode();
+
+        /// <summary>
+        /// Returns the stored pending start node only when a pending start exists and that node is
+        /// still present in the graph; otherwise null. Never mutates state.
+        /// </summary>
+        private RoadNodeId? GetLivePendingStartNode()
+        {
+            if (!_hasPendingStart || !_pendingStartNode.HasValue)
+            {
+                return null;
+            }
+
+            if (!_graph.TryGetNode(_pendingStartNode.Value, out _))
+            {
+                return null;
+            }
+
+            return _pendingStartNode;
+        }
 
         /// <summary>
         /// Clears the pending start point without modifying the road graph.
@@ -168,7 +190,8 @@ namespace MedievalCityBuilder.Roads
             }
 
             // With pending start
-            if (snapped.NodeId.HasValue && _pendingStartNode.HasValue && snapped.NodeId.Value.Value == _pendingStartNode.Value.Value)
+            RoadNodeId? liveStart = GetLivePendingStartNode();
+            if (snapped.NodeId.HasValue && liveStart.HasValue && snapped.NodeId.Value.Value == liveStart.Value.Value)
             {
                 return new RoadToolPreview(
                     false,
@@ -203,9 +226,9 @@ namespace MedievalCityBuilder.Roads
                     true);
             }
 
-            if (_pendingStartNode.HasValue && snapped.NodeId.HasValue)
+            if (liveStart.HasValue && snapped.NodeId.HasValue)
             {
-                if (_graph.AreConnected(_pendingStartNode.Value, snapped.NodeId.Value) && DoesSegmentExist(_pendingStartNode.Value, snapped.NodeId.Value))
+                if (DoesSegmentExist(liveStart.Value, snapped.NodeId.Value))
                 {
                     return new RoadToolPreview(
                         false,
@@ -286,7 +309,8 @@ namespace MedievalCityBuilder.Roads
             }
 
             // WITH PENDING START
-            if (snapped.NodeId.HasValue && _pendingStartNode.HasValue && snapped.NodeId.Value.Value == _pendingStartNode.Value.Value)
+            RoadNodeId? liveStart = GetLivePendingStartNode();
+            if (snapped.NodeId.HasValue && liveStart.HasValue && snapped.NodeId.Value.Value == liveStart.Value.Value)
             {
                 return RoadToolResult.Fail(RoadToolFailure.SameNode, RoadPlacementFailure.None, RoadCost.Zero);
             }
@@ -305,9 +329,9 @@ namespace MedievalCityBuilder.Roads
                 return RoadToolResult.Fail(RoadToolFailure.Terrain, segmentValidation.Failure, RoadCost.Zero);
             }
 
-            if (_pendingStartNode.HasValue && snapped.NodeId.HasValue)
+            if (liveStart.HasValue && snapped.NodeId.HasValue)
             {
-                if (DoesSegmentExist(_pendingStartNode.Value, snapped.NodeId.Value))
+                if (DoesSegmentExist(liveStart.Value, snapped.NodeId.Value))
                 {
                     return RoadToolResult.Fail(RoadToolFailure.DuplicateSegment, RoadPlacementFailure.None, RoadCost.Zero);
                 }
@@ -324,7 +348,7 @@ namespace MedievalCityBuilder.Roads
             }
 
             // All validation happens before payment and before any mutation, so a failure never leaves a partial state.
-            RoadNodeId startNodeId = _pendingStartNode ?? _graph.AddNode(_pendingStartX, _pendingStartZ);
+            RoadNodeId startNodeId = liveStart ?? _graph.AddNode(_pendingStartX, _pendingStartZ);
             RoadNodeId endNodeId = snapped.NodeId ?? _graph.AddNode(snapped.X, snapped.Z);
             RoadSegmentId segmentId = _graph.AddSegment(startNodeId, endNodeId);
 
