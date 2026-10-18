@@ -1,4 +1,5 @@
 using Godot;
+using System;
 
 using MedievalCityBuilder.Persistence;
 using MedievalCityBuilder.World;
@@ -37,6 +38,21 @@ public partial class TerrainView : Node3D
     /// The current world data used to build the terrain and water.
     /// </summary>
     public WorldSaveData CurrentWorld { get; private set; } = null!;
+
+    /// <summary>
+    /// The terrain surface used for raycasting and height sampling.
+    /// </summary>
+    public TerrainSurface Surface { get; private set; } = null!;
+
+    /// <summary>
+    /// The water settings for the current world.
+    /// </summary>
+    public WaterSettings Water { get; private set; } = null!;
+
+    /// <summary>
+    /// Invoked after ApplyWorld completes and the new world is ready.
+    /// </summary>
+    public event Action? WorldApplied;
 
     public override void _Ready()
     {
@@ -166,5 +182,8 @@ public partial class TerrainView : Node3D
         GD.Print($"WaterPlane: SeaLevel={data.Water.SeaLevel}, underwaterFraction={underwaterFraction:F4}");
 
         CurrentWorld = data;
+        Surface = TerrainSurface.Centered(heightmap, CellSize, HeightScale);
+        Water = data.Water;
+        WorldApplied?.Invoke();
     }
 }
