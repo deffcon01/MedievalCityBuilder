@@ -1988,3 +1988,83 @@ Phase 1.3c-iii-b-2 click-to-place after the !is_inside_tree fix: roads, markers,
 
 ## Manual verification (user, F5)
 Phase 1.3c-iii-b-2 click-to-place after the !is_inside_tree fix (setting GlobalPosition before AddChild on node markers): roads, markers, chaining, right click cancel and failure messages work, camera controls work with the tool on, console clean on click, N and F7. Verified manually. Result: pass.
+
+---
+## P1-3c-iv-a.2,3 — RoadRibbonTests Creation and Verification
+
+### 2026-10-18 - Created RoadRibbonTests.cs with comprehensive tests for RoadRibbonMesh and RoadRibbonBuilder
+
+**What changed**:
+- Created `tests/MedievalCityBuilder.Tests/RoadRibbonTests.cs` with 47 new tests covering:
+  1. **RoadRibbonMesh constructor validation** (6 tests): null arguments, mismatched Positions/Normals lengths, Positions length not divisible by 3, Indices length not divisible by 3
+  2. **Build validation** (20 tests): null surface; NaN/infinite in each of 4 coordinates; width 0, negative, NaN, infinite; spacing 0, negative, NaN, infinite; NaN/infinite heightOffset; endpoint outside bounds (4 directions); zero-length segment
+  3. **Flat surface test**: segment (-3,0)->(3,0), width 2, spacing 1, heightOffset 0.15: 7 points, 14 vertices, 12 triangles; vertex positions verified; all Y=5.15; all normals (0,1,0); all indices valid
+  4. **Winding tests** (7 parameterized directions): (-3,0)->(3,0), (3,0)->(-3,0), (0,-3)->(0,3), (0,3)->(0,-3), (-3,-3)->(3,3), (3,3)->(-3,-3), (-3,3)->(3,-3); all triangles have strictly negative Y cross component
+  5. **Ramp test**: segment along Z at x=0, (0,-3)->(0,3), width 2, spacing 1, heightOffset 0: left vertices x=-1, Y=1.5; right vertices x=+1, Y=2.5 (world height = 0.5*(x+4))
+  6. **Reversal test**: Build(p1,p2) and Build(p2,p1) have same counts and all-negative winding
+  7. **Larger spacing test**: spacing > length gives 2 points (4 vertices, 2 triangles)
+  8. **Edge clamping tests**: max Z edge (-3,4)->(3,4) and min X edge with non-binary surface; vertices clamped inside bounds, finite Y, winding <= 1e-12
+  9. **Very wide width test**: width 1000 builds without exception, all vertices clamped
+  10. **Determinism test**: same call twice gives identical arrays
+  11. **Fuzz tests** (2 x 500 segments each with DeterministicRandom(8080)):
+      - Interior segments: endpoints uniform in [MinX+3, MaxX-3] x [MinZ+3, MaxZ-3], skip <1.0; assert no throw, correct counts, valid indices, inside bounds, strict negative winding, vertex Y = surface.SampleHeight + 0.15 within 1e-6
+      - Edge segments: endpoints chosen as exactly min, exactly max, or uniform inside; skip <1.0; assert no throw, valid indices, inside bounds, winding <= 1e-12
+      - Both fuzz sets run twice, assert identical arrays
+
+**Verification Results**:
+
+`dotnet build MedievalCityBuilder.csproj` output:
+```
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  MedievalCityBuilder -> C:\Users\Admin\Coding\medieval-city-builder\.godot\mono\temp\bin\Debug\MedievalCityBuilder.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+```
+
+`tools/build.ps1` output:
+```
+Building MedievalCityBuilder...
+Build succeeded!
+```
+
+`dotnet test tests/MedievalCityBuilder.Tests` output:
+```
+Test run for MedievalCityBuilder.Tests.dll (.NETCoreApp,Version=v8.0)
+Passed!  - Failed:     0, Passed:   450, Skipped:     0, Total:   450, Duration: 501 ms
+```
+(Total test suite: 450 tests = 403 existing + 47 new RoadRibbonTests, all passing)
+
+`tools/run-headless.ps1` output:
+```
+Running MedievalCityBuilder in headless mode...
+Godot: C:\Users\Admin\Downloads\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe
+Project: .
+Godot Engine v4.7.2.stable.mono.official.ed1daf0bf - https://godotengine.org
+
+TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+MedievalCityBuilder: Main scene loaded
+Keys: F6 save, F7 load, N new random world
+RoadTool: ready (R toggles road tool)
+Headless run completed successfully!
+```
+- **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR". The five required lines (two TerrainView lines, "Main scene loaded", "Keys" hint, "RoadTool: ready") are present in order, unchanged.
+- **Seed 12345 diagnostic line** (from existing test): `Valid=800, Underwater=99, TooSteep=0, OutOfBounds=0, TooShort=0, Total=899` (unchanged).
+
+**Git log --oneline -5:**
+```
+883b0b8 P1-3c-iv-a.1: add RoadRibbonMesh and RoadRibbonBuilder
+4d1484d docs: record manual verification of click-to-place road tool
+bd71437 Merge phase1-3c-iii-b-2-click-place: click-to-place roads with markers and lines
+81b5cf5 docs: record manual verification of click-to-place road tool
+5aeb7de P1-3c-iii-b-2-fix.1: set marker GlobalPosition after AddChild
+```
+
+### Final Status (P1-3c-iv-a.2,3)
+- **Done**: RoadRibbonTests.cs created and verified (47 tests); PROGRESS.md updated.
+- **Verified**: All three verification commands pass; 450 tests total (403 existing + 47 new); headless run clean with required log lines unchanged; zero WARNING/ERROR lines.
+- **Blocked**: None.
+- **Next**: Phase 1.3 — Road ribbon mesh rendering or other Basic world items.
