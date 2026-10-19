@@ -1982,3 +1982,6 @@ db197ec P1-3c-iii-b-1-fix.1: fix test helper type
 - **Verified**: All three verification commands pass.
 - **Blocked**: None.
 - **Next**: Phase 1.3 ? Road ribbon mesh (1.3c-iv) or saving road graph.
+
+## Manual verification (user, F5)
+Phase 1.3c-iii-b-2 click-to-place after the !is_inside_tree fix: roads, markers, chaining, right click cancel and failure messages work, camera controls work with the tool on, console clean on click, N and F7. Verified manually on 2026-10-15. Result: pass.
