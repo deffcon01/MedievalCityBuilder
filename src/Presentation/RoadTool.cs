@@ -318,11 +318,11 @@ public partial class RoadTool : Node3D
                 {
                     Mesh = markerMesh,
                     Name = $"NodeMarker_{nodeId.Value}",
-                    GlobalPosition = new Vector3((float)node.X, (float)y, (float)node.Z),
                     CastShadow = GeometryInstance3D.ShadowCastingSetting.Off
                 };
                 marker.SetSurfaceOverrideMaterial(0, _nodeMarkerMaterial);
                 _visuals.AddChild(marker);
+                marker.GlobalPosition = new Vector3((float)node.X, (float)y, (float)node.Z);
                 _nodeMarkers[nodeId.Value] = marker;
             }
         }
