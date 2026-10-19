@@ -1,6 +1,6 @@
-# Development Progress Log
+﻿# Development Progress Log
 
-## Phase 0 — Project Bootstrap
+## Phase 0 â€” Project Bootstrap
 
 ### 2026-10-12 - Created docs/PROGRESS.md
 - **What changed**: Created docs/PROGRESS.md to track development progress
@@ -35,7 +35,7 @@
 - **Done**: All Phase 0 items implemented and verified.
 - **Verified**: `dotnet build` succeeds; Godot headless run prints "MedievalCityBuilder: Main scene loaded" and exits cleanly.
 - **Blocked**: None.
-- **Next**: Phase 1 — Technical prototype (camera, basic world, roads, zoning, building development, population).
+- **Next**: Phase 1 â€” Technical prototype (camera, basic world, roads, zoning, building development, population).
 
 ---
 
@@ -48,8 +48,8 @@
 4. `project.godot` updated with `run/main_scene="res://scenes/Main.tscn"`.
 5. `tools/build.ps1` (dotnet build Debug) and `tools/run-headless.ps1` (Godot console exe --headless --quit-after 5) created.
 6. Both scripts verified:
-   - `./tools/build.ps1` → `Build succeeded!`
-   - `./tools/run-headless.ps1` → `MedievalCityBuilder: Main scene loaded` → `Headless run completed successfully!`
+   - `./tools/build.ps1` â†’ `Build succeeded!`
+   - `./tools/run-headless.ps1` â†’ `MedievalCityBuilder: Main scene loaded` â†’ `Headless run completed successfully!`
 7. All Phase 0 checkboxes in TODO.md checked off.
 
 ### Verified
@@ -62,11 +62,11 @@
 - None.
 
 ### Next
-- Phase 1 — Technical prototype.
+- Phase 1 â€” Technical prototype.
 
 ---
 
-## Phase 1.1 — Camera
+## Phase 1.1 â€” Camera
 
 ### 2026-10-12 - Created CameraMath (src/Core/CameraMath.cs)
 - **What changed**: Pure C# static class with ClampZoom, ClampToBounds, WrapYaw
@@ -94,7 +94,7 @@
   - [ ] Q / E rotate camera yaw left/right
   - [ ] Mouse wheel zooms in/out (distance from pivot clamped to zoomMin/zoomMax)
   - [ ] Camera does not pan beyond boundsMinX/MaxX/MinZ/MaxZ
-  - [ ] Pitch is fixed at pitchDegrees (55° placeholder)
+  - [ ] Pitch is fixed at pitchDegrees (55Â° placeholder)
   - [ ] No drift or jitter during combined pan/rotate/zoom
 
 ## Fix: RoadTool !is_inside_tree() error (2026-10-18)
@@ -110,12 +110,12 @@
 - **Done**: CameraMath, CameraRig, test plane, scene integration.
 - **Verified**: Build succeeds; headless run loads scene and prints log.
 - **Blocked**: None.
-- **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+- **Next**: Phase 1.2 â€” Basic world (terrain, water, seed).
 - **Manual verification needed**: Items marked "unverified manually" above.
 
 ---
 
-## Phase 1.1b — Camera Fixes & Visuals
+## Phase 1.1b â€” Camera Fixes & Visuals
 
 ### 2026-10-12 - Fixed CameraRig.ApplyZoom and _Input
 - **What changed**: 
@@ -148,13 +148,13 @@
   - [ ] After pressing E or Q (rotate yaw), W still moves toward where the camera faces
   - [ ] Mouse wheel zooms one step per notch (distance from pivot clamped to zoomMin/zoomMax)
   - [ ] Panning stops at bounds (camera does not exceed boundsMinX/MaxX/MinZ/MaxZ)
-  - [ ] Pitch is fixed at pitchDegrees (55° placeholder)
+  - [ ] Pitch is fixed at pitchDegrees (55Â° placeholder)
   - [ ] No drift or jitter during combined pan/rotate/zoom
 - **All items marked "unverified manually"**
 
 ---
 
-## Phase 1.1c — Camera Zoom Spin Fix & Godot 4 Warnings
+## Phase 1.1c â€” Camera Zoom Spin Fix & Godot 4 Warnings
 
 ### 2026-10-12 - Fixed CameraRig.ApplyZoom
 - **What changed**: Removed `_camera.LookAt(Vector3.Zero, Vector3.Up)`. Camera local rotation is now set directly: `_camera.Rotation = new Vector3(-pitchRad, 0f, 0f)`. Added comment explaining LookAt uses global coordinates, which caused zoom to spin the camera once the rig moved away from the origin.
@@ -187,22 +187,22 @@
 
 ## Final Status (Phase 1.1c)
 - **Done**: All four items implemented and committed (3 commits on `phase1-camera`).
-- **Verified**: `./tools/build.ps1` → `Build succeeded!`; `./tools/run-headless.ps1` → full output recorded above, exit 0, zero WARNING/ERROR lines.
+- **Verified**: `./tools/build.ps1` â†’ `Build succeeded!`; `./tools/run-headless.ps1` â†’ full output recorded above, exit 0, zero WARNING/ERROR lines.
 - **Blocked**: None.
-- **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+- **Next**: Phase 1.2 â€” Basic world (terrain, water, seed).
 - **Remaining**: Manual zoom-after-pan test (see checklist above) still needs F5 in the editor.
 
 ### Final Status (Phase 1.1b)
 - **Done**: CameraRig fixes, grid shader, markers, light/camera fixes.
 - **Verified**: Build succeeds; headless run loads scene and prints log.
 - **Blocked**: None.
-- **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+- **Next**: Phase 1.2 â€” Basic world (terrain, water, seed).
 ## Manual verification (user, F5)
 Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console verified manually on 2026-10-12. Result: pass.
 
 ---
 
-## Phase 1-Tests — xUnit Test Project Setup
+## Phase 1-Tests â€” xUnit Test Project Setup
 
 ### 2026-10-12 - Added xUnit test project and CameraMath tests
 - **What changed**: 
@@ -236,17 +236,17 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
     MedievalCityBuilder: Main scene loaded
     Headless run completed successfully!
     ```
-- **Notes**: All three verification commands pass. CameraMath tests cover all specified cases: ClampZoom (below min, above max, inside range), ClampToBounds (inside, each edge, outside on both axes), WrapYaw (0, 180 → 180, -180 → 180, 190 → -170, -190 → 170, 360 → 0, 540 → 180).
+- **Notes**: All three verification commands pass. CameraMath tests cover all specified cases: ClampZoom (below min, above max, inside range), ClampToBounds (inside, each edge, outside on both axes), WrapYaw (0, 180 â†’ 180, -180 â†’ 180, 190 â†’ -170, -190 â†’ 170, 360 â†’ 0, 540 â†’ 180).
 
 ## Final Status (Phase 1-Tests)
 - **Done**: xUnit test project created, CameraMath tests implemented, test runner script added, all verifications pass.
-- **Verified**: `tools/build.ps1` → Build succeeded; `tools/test.ps1` → All 14 tests passed; `tools/run-headless.ps1` → Scene loads and exits cleanly.
+- **Verified**: `tools/build.ps1` â†’ Build succeeded; `tools/test.ps1` â†’ All 14 tests passed; `tools/run-headless.ps1` â†’ Scene loads and exits cleanly.
 - **Blocked**: None.
-- **Next**: Phase 1.2 — Basic world (terrain, water, seed).
+- **Next**: Phase 1.2 â€” Basic world (terrain, water, seed).
 
 ---
 
-## Phase 1-2a — World Seed, Generator Settings and Deterministic Random Streams
+## Phase 1-2a â€” World Seed, Generator Settings and Deterministic Random Streams
 
 ### 2026-10-12 - Implemented deterministic random streams and world generation settings
 - **What changed**: 
@@ -261,18 +261,18 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
 - **Verification Results**:
   - `./tools/build.ps1` output: `Build succeeded!`
   - `dotnet test tests/MedievalCityBuilder.Tests` output: 42 tests passed (0 failed, 0 skipped)
-  - `./tools/run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` → `Headless run completed successfully!`
+  - `./tools/run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` â†’ `Headless run completed successfully!`
 - **Notes**: All tests pass including the SplitMix64 seed 0 reference value (0xE220A8397B1DCDAF). RandomStreams order independence verified. WorldGenerationSettings validation works. WorldSizeTable ordering verified.
 
 ## Final Status (Phase 1-2a)
 - **Done**: All 7 implementation items + tests implemented and verified.
 - **Verified**: Build succeeds; 42 tests pass; headless run clean.
 - **Blocked**: None.
-- **Next**: Phase 1.2b — Bounded test terrain / terrain representation.
+- **Next**: Phase 1.2b â€” Bounded test terrain / terrain representation.
 
 ---
 
-## Phase 1-2b — Seeded Heightmap Generator
+## Phase 1-2b â€” Seeded Heightmap Generator
 
 ### 2026-10-12 - Implemented seeded heightmap generator (plain C#, no Godot)
 - **What changed**:
@@ -293,18 +293,18 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
 - **Verification Results**:
   - `./tools/build.ps1` output: `Build succeeded!`
   - `dotnet test tests/MedievalCityBuilder.Tests` output: 54 tests passed (0 failed, 0 skipped)
-  - `./tools/run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` → `Headless run completed successfully!`
+  - `./tools/run-headless.ps1` output: `MedievalCityBuilder: Main scene loaded` â†’ `Headless run completed successfully!`
 - **Notes**: All tests pass including golden test locking the current algorithm. The 54 new tests plus 42 previous = 96 total tests.
 
 ## Final Status (Phase 1-2b)
 - **Done**: All 5 implementation items + tests implemented and verified.
 - **Verified**: Build succeeds; 54 tests pass (96 total); headless run clean.
 - **Blocked**: None.
-- **Next**: Phase 1.2c — Water generation.
+- **Next**: Phase 1.2c â€” Water generation.
 
 ---
 
-## Phase 1-2b-fix — Fix Correlated Octave Seeds and Clean Up
+## Phase 1-2b-fix â€” Fix Correlated Octave Seeds and Clean Up
 
 ### 2026-10-13 - Fixed correlated octave seeds in ValueNoise and TerrainGenerator
 - **What changed**:
@@ -344,7 +344,7 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
 - **Done**: All 5 implementation items + tests implemented and verified.
 - **Verified**: Build succeeds; 56 tests pass (98 total including Phase 1-2a); headless run clean.
 - **Blocked**: None.
-- **Next**: Phase 1.2c — Water generation.
+- **Next**: Phase 1.2c â€” Water generation.
 
 ---
 
@@ -372,11 +372,11 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
 - None
 
 ### Next
-- Phase 1.2 — Basic world (terrain, water, seed)
+- Phase 1.2 â€” Basic world (terrain, water, seed)
 
 ---
 
-## Final Report (2026-10-13) — Phase 1-2b-fix
+## Final Report (2026-10-13) â€” Phase 1-2b-fix
 
 ### Done
 1. Added `ValueNoise.OctaveSeed(ulong noiseSeed, int octave)` method in `src/World/ValueNoise.cs` using SplitMix64 finalizer for well-mixed octave seeds.
@@ -391,9 +391,9 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
    - **OLD values**: (0,0)=0.63614976406097412, (31,31)=0.50005364418029785, (63,63)=0.38636791706085205
    - **NEW values**: (0,0)=0.26993528008460999, (31,31)=0.42523997975755096, (63,63)=0.24660804867744446
 5. Verified all three verification commands:
-   - `tools/build.ps1` → `Build succeeded!`
-   - `dotnet test tests/MedievalCityBuilder.Tests` → 56 tests passed (0 failed, 0 skipped)
-   - `tools/run-headless.ps1` → Scene loads and exits cleanly with exit code 0, no WARNING/ERROR lines
+   - `tools/build.ps1` â†’ `Build succeeded!`
+   - `dotnet test tests/MedievalCityBuilder.Tests` â†’ 56 tests passed (0 failed, 0 skipped)
+   - `tools/run-headless.ps1` â†’ Scene loads and exits cleanly with exit code 0, no WARNING/ERROR lines
 
 ### Verified
 - `tools/build.ps1` builds successfully with zero errors
@@ -407,11 +407,11 @@ Phase 1.1 camera: pan, rotate, zoom, orientation markers and startup console ver
 - None
 
 ### Next
-- Phase 1.2c — Water generation
+- Phase 1.2c â€” Water generation
 
 ---
 
-## Phase 1-2c — Draw Heightmap as Terrain Mesh
+## Phase 1-2c â€” Draw Heightmap as Terrain Mesh
 
 ### 2026-10-13 - Implemented TerrainMeshData (src/World/TerrainMeshData.cs)
 - **What changed**:
@@ -508,11 +508,11 @@ d635ad0 P1-2c.3: Add TerrainView presentation node
 - **Done**: All 5 implementation items + tests implemented and verified.
 - **Verified**: Build succeeds; 73 new tests pass (129 total); headless run clean with TerrainView log line and zero WARNING/ERROR lines.
 - **Blocked**: None.
-- **Next**: Phase 1.2 — Water representation (or other Basic world items).
+- **Next**: Phase 1.2 â€” Water representation (or other Basic world items).
 
 ---
 
-## Final Report (2026-10-13) — Phase 1-2c
+## Final Report (2026-10-13) â€” Phase 1-2c
 
 ### Done
 1. `src/World/TerrainMeshData.cs`: Pure C# class with Positions/Normals/Indices arrays, VertexCount/TriangleCount properties, and static Build() method. Vertex mapping, central-difference normals, two triangles per cell, correct clockwise winding for Y-up front-face-up, argument validation.
@@ -525,9 +525,9 @@ d635ad0 P1-2c.3: Add TerrainView presentation node
 8. `docs/PROGRESS.md`: Full verification output recorded.
 
 ### Verified
-- `tools/build.ps1` → `Build succeeded!`
-- `dotnet test tests/MedievalCityBuilder.Tests` → 73 new tests pass (129 total including previous phases), 0 failed
-- `tools/run-headless.ps1` → Scene loads, prints TerrainView log line, exits 0, **zero WARNING/ERROR lines**
+- `tools/build.ps1` â†’ `Build succeeded!`
+- `dotnet test tests/MedievalCityBuilder.Tests` â†’ 73 new tests pass (129 total including previous phases), 0 failed
+- `tools/run-headless.ps1` â†’ Scene loads, prints TerrainView log line, exits 0, **zero WARNING/ERROR lines**
 - No packages added, no GOAL.md/DESIGN.md/ARCHITECTURE.md changes, no water/roads/zoning/save-load/gameplay code added
 - Core rule respected: simulation logic in src/World, presentation only in src/Presentation
 
@@ -555,10 +555,10 @@ d635ad0 P1-2c.3: Add TerrainView presentation node
 - **Done**: All scope items implemented and verified.
 - **Verified**: All three verification commands pass.
 - **Blocked**: None.
-- **Next**: Phase 1.2 — Water representation or other Basic world items.
+- **Next**: Phase 1.2 â€” Water representation or other Basic world items.
 
 ---
-## P1-2c-tests — Add Missing Normal-Scaling Tests
+## P1-2c-tests â€” Add Missing Normal-Scaling Tests
 
 ### 2026-10-13 - Added normal-scaling tests to TerrainMeshDataTests.cs
 - **What changed**: Added 5 new tests to `tests/MedievalCityBuilder.Tests/TerrainMeshDataTests.cs` (using `Heightmap.Set` to build heightmaps; existing tests unchanged):
@@ -610,17 +610,17 @@ b4259d1 P1-2c-fix.1: fix terrain normal slope scaling
 - **Done**: All 5 normal-scaling tests added and passing.
 - **Verified**: Build succeeds; 78 tests pass in this phase's test file; headless run clean with zero WARNING/ERROR lines.
 - **Blocked**: None.
-- **Next**: Phase 1.2 — Water representation or other Basic world items.
+- **Next**: Phase 1.2 â€” Water representation or other Basic world items.
 
 ### Status
 - **Done**: All scope items implemented and verified.
 - **Verified**: All three verification commands pass.
 - **Blocked**: None.
-- **Next**: Phase 1.2 — Water representation or other Basic world items.
+- **Next**: Phase 1.2 â€” Water representation or other Basic world items.
 
 ---
 
-## Phase 1-2d — Water Level (Sea-Level Plane)
+## Phase 1-2d â€” Water Level (Sea-Level Plane)
 
 ### 2026-10-13 - Implemented water level (sea-level plane)
 - **What changed**:
@@ -657,7 +657,7 @@ b4259d1 P1-2c-fix.1: fix terrain normal slope scaling
     Headless run completed successfully!
     ```
   - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. No unresolved warnings.
-  - **Underwater fraction for seed 12345**: 0.0772 (7.72%) — within acceptable range (not 0% or >80%), no flag needed.
+  - **Underwater fraction for seed 12345**: 0.0772 (7.72%) â€” within acceptable range (not 0% or >80%), no flag needed.
 
 - **Manual Checklist (unverified manually)**:
   - [ ] Blue translucent water fills low areas
@@ -680,13 +680,13 @@ a964335 Merge phase1-2c-terrain-mesh: terrain mesh from seeded heightmap
 - **Done**: All 6 scope items implemented and verified.
 - **Verified**: Build succeeds; 98 tests pass (20 new + 78 previous); headless run clean with both TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
 - **Blocked**: None.
-- **Next**: Phase 1.3 — Roads or other Basic world items.
+- **Next**: Phase 1.3 â€” Roads or other Basic world items.
 ## Manual verification (user, F5)
 Phase 1.2 water: translucent water fills low areas, hills rise above it, no flicker, z-fighting or black patches, camera controls and console clean. Verified manually on 2026-10-13. Result: pass.
 
 ---
 
-## Phase 1-2e — Save Format (In-Memory JSON)
+## Phase 1-2e â€” Save Format (In-Memory JSON)
 
 ### 2026-10-14 - Implemented WorldSaveSerializer and tests
 - **What changed**:
@@ -740,12 +740,12 @@ c3a19a4 Merge phase1-2d-water: sea-level water plane
 - **Done**: All scope items (items 4, 5, 6) implemented and verified.
 - **Verified**: Build succeeds; 120 tests pass (20 new + 100 previous); headless run clean with TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
 - **Blocked**: None.
-- **Next**: Phase 1.3 — Roads or other Basic world items.
+- **Next**: Phase 1.3 â€” Roads or other Basic world items.
 - **Reminder**: "Save/load seed" in TODO.md is NOT checked off yet (file I/O not implemented).
 
 ---
 
-## P1-2e-fix — Harden WorldSaveSerializer
+## P1-2e-fix â€” Harden WorldSaveSerializer
 
 ### 2026-10-14 - Hardened WorldSaveSerializer field deserialization and culture handling
 - **What changed**:
@@ -753,12 +753,12 @@ c3a19a4 Merge phase1-2d-water: sea-level water plane
      - Added `using System.Globalization;`
      - Made all DTO numeric fields nullable: `FormatVersion`, `GeneratorVersion` in `SaveDto`; `Octaves`, `BaseFeatureSizeCells`, `Persistence`, `Lacunarity` in `TerrainDto`; `SeaLevel` in `WaterDto`
      - In `Deserialize`: check formatVersion first, then generatorVersion, then seed, then worldSize, then terrain fields in order (octaves, baseFeatureSizeCells, persistence, lacunarity), then water field (seaLevel). Each missing field throws `SaveFormatException` with message naming that field.
-     - Seed parsing: `ulong.TryParse(seedText, NumberStyles.None, CultureInfo.InvariantCulture, out seed)` — rejects whitespace, "+" sign, and uses invariant culture.
+     - Seed parsing: `ulong.TryParse(seedText, NumberStyles.None, CultureInfo.InvariantCulture, out seed)` â€” rejects whitespace, "+" sign, and uses invariant culture.
      - Seed serialization: `Seed.ToString(CultureInfo.InvariantCulture)`.
      - Property order and JSON field names unchanged.
   2. Added tests to `tests/MedievalCityBuilder.Tests/WorldSaveSerializerTests.cs` (18 new tests, existing tests unchanged):
      - `Deserialize_MissingField_ThrowsSaveFormatExceptionWithFieldName`: 11 cases covering missing formatVersion, generatorVersion, seed, worldSize, terrain, octaves, baseFeatureSizeCells, persistence, lacunarity, water, seaLevel. Each throws SaveFormatException with the field name in the message.
-     - `Deserialize_InvalidSeed_ThrowsSaveFormatException`: 5 cases — seeds " 5", "5 ", "+5", "", "18446744073709551616" (ulong.MaxValue+1) all throw.
+     - `Deserialize_InvalidSeed_ThrowsSaveFormatException`: 5 cases â€” seeds " 5", "5 ", "+5", "", "18446744073709551616" (ulong.MaxValue+1) all throw.
      - `Deserialize_SeedUlongMaxValue_LoadsSuccessfully`: "18446744073709551615" loads as ulong.MaxValue.
      - `Deserialize_WorldSizeSmallLowercase_ThrowsSaveFormatException`: worldSize "small" (lowercase) throws.
      - `CultureTest_RoundTripWithAwkwardDoubles`: Inside try/finally, sets CultureInfo.CurrentCulture to "de-DE", does round-trip with doubles 0.1 and 1.0/3.0, asserts record equality and that JSON text contains "0.1" and not "0,1". Restores original culture in finally.
@@ -808,35 +808,35 @@ c3a19a4 Merge phase1-2d-water: sea-level water plane
 - **Done**: Both numbered items implemented and verified.
 - **Verified**: Build succeeds; 138 tests pass (18 new + 120 previous); headless run clean with both TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
 - **Blocked**: None.
-- **Next**: Phase 1.3 — Roads or other Basic world items.
+- **Next**: Phase 1.3 â€” Roads or other Basic world items.
 
 ---
 
-## P1-3c-ii — Terrain Raycaster (Plain C#, No Godot)
+## P1-3c-ii â€” Terrain Raycaster (Plain C#, No Godot)
 
 ### 2026-10-18 - Implemented TerrainRaycaster and TerrainRayHit
 
 - **What changed**:
   1. Created `src/World/TerrainRayHit.cs`: public readonly record struct with X, Y, Z, Distance (double). Uses same world coordinate system as TerrainSurface.
   2. Created `src/World/TerrainRaycaster.cs`: static class with `TryRaycast(TerrainSurface surface, double originX, originY, originZ, dirX, dirY, dirZ, double maxDistance, double step, out TerrainRayHit hit)`.
-     - Validation throws before any work: null surface → ArgumentNullException; origin/direction NaN/infinite → ArgumentOutOfRangeException; direction length < 1e-12 → ArgumentException; maxDistance/step NaN/infinite/<=0 → ArgumentOutOfRangeException; maxDistance/step > 1,000,000 → ArgumentOutOfRangeException (protects against huge loops).
+     - Validation throws before any work: null surface â†’ ArgumentNullException; origin/direction NaN/infinite â†’ ArgumentOutOfRangeException; direction length < 1e-12 â†’ ArgumentException; maxDistance/step NaN/infinite/<=0 â†’ ArgumentOutOfRangeException; maxDistance/step > 1,000,000 â†’ ArgumentOutOfRangeException (protects against huge loops).
      - Algorithm: normalizes direction; walks steps with t = min(i*step, maxDistance); tracks prevT, prevF, prevInBounds.
      - If point outside bounds: prevInBounds = false, continue.
      - f = p.Y - surface.SampleHeight(p.X, p.Z).
      - If f == 0: hit at t.
      - If f < 0 and prevInBounds and prevF >= 0: bisection (50 iterations, lo above/on, hi below), midpoint t hit.
-     - If f < 0 and not prevInBounds: return false (ray starts/enters below surface → no hit).
+     - If f < 0 and not prevInBounds: return false (ray starts/enters below surface â†’ no hit).
      - Otherwise (f > 0): update prev and continue.
      - Hit: X,Z from ray at final t (clamped to surface bounds), Y = surface.SampleHeight(X,Z), Distance = final t.
-     - Class comment: same world coordinate system as TerrainSurface; step ≤ half cell size to avoid skipping ridges; ray exactly on surface hits at first in-bounds sample; pure and deterministic.
+     - Class comment: same world coordinate system as TerrainSurface; step â‰¤ half cell size to avoid skipping ridges; ray exactly on surface hits at first in-bounds sample; pure and deterministic.
   3. Created `tests/MedievalCityBuilder.Tests/TerrainRaycasterTests.cs`: 50 tests covering:
      - Validation: null surface, NaN/infinite in all 6 origin/direction components, zero direction, NaN/infinite/zero/negative maxDistance/step, maxDistance/step > 1M.
-     - Flat 9x9 heightmap (value 0.5, cellSize 1, heightScale 10 → extents -4..4, height 5.0):
+     - Flat 9x9 heightmap (value 0.5, cellSize 1, heightScale 10 â†’ extents -4..4, height 5.0):
        - Vertical down from (0,15,0) hits (0,5,0) distance 10.
        - Scaled direction (0,-2,0) gives same hit.
-       - Diagonal from (-4,9,0) direction (1,-1,0) hits (0,5,0) distance 4√2.
+       - Diagonal from (-4,9,0) direction (1,-1,0) hits (0,5,0) distance 4âˆš2.
        - Enters from outside (-20,25,0) direction (1,-1,0) hits (0,5,0).
-     - Ramp 5x5 (value = 0.25*x, cellSize 2, heightScale 4, Centered → world height = 0.5*(x+4)):
+     - Ramp 5x5 (value = 0.25*x, cellSize 2, heightScale 4, Centered â†’ world height = 0.5*(x+4)):
        - From (1,10,0) direction (0,-1,0) hits Y=2.5.
        - From (-3,10,0) hits Y=0.5.
        - From (4,10,0) hits Y=4.0.
@@ -846,7 +846,7 @@ c3a19a4 Merge phase1-2d-water: sea-level water plane
      - Hit Y equals surface.SampleHeight(X,Z) within 1e-9.
      - Hit point equals origin + normalized dir * Distance in X,Z within 1e-6.
      - Determinism: same call twice gives equal results.
-     - Fuzz: DeterministicRandom(2024), terrain from seed 12345, GeneratorVersion 1, TerrainSettings.Default, 64x64, Centered(1.0, 10.0). 2000 rays: origin x,z in [MinX-10, MaxX+10], origin y in [10,40]; dir x,z in [-1,1], dir y in [-1,-0.1]; maxDistance 200, step 0.5. Assert for every hit: Distance ∈ [0,200], Y = SampleHeight(X,Z) ±1e-6, hit point = origin + normDir*Distance in X,Z ±1e-6. At least 500 hits, at least 100 misses. Run twice → identical hit lists.
+     - Fuzz: DeterministicRandom(2024), terrain from seed 12345, GeneratorVersion 1, TerrainSettings.Default, 64x64, Centered(1.0, 10.0). 2000 rays: origin x,z in [MinX-10, MaxX+10], origin y in [10,40]; dir x,z in [-1,1], dir y in [-1,-0.1]; maxDistance 200, step 0.5. Assert for every hit: Distance âˆˆ [0,200], Y = SampleHeight(X,Z) Â±1e-6, hit point = origin + normDir*Distance in X,Z Â±1e-6. At least 500 hits, at least 100 misses. Run twice â†’ identical hit lists.
 
 - **Commands**: 3 commits on `phase1-3c-ii-raycast`
   - `src/World/TerrainRayHit.cs`
@@ -897,7 +897,7 @@ da0f9e4 P1-3c-i-fix.2: tests for stale pending start
 
 ---
 
-## Phase 1-3a — RoadGraph: Fix Warnings and Add Adjacency Index
+## Phase 1-3a â€” RoadGraph: Fix Warnings and Add Adjacency Index
 
 ### 2026-10-14 - Fixed CS8601 warnings and added adjacency index
 - **What changed**:
@@ -914,7 +914,7 @@ da0f9e4 P1-3c-i-fix.2: tests for stale pending start
 
 ---
 
-## Phase 1-3a-ii — Terrain Surface Sampling and Road Placement Validity
+## Phase 1-3a-ii â€” Terrain Surface Sampling and Road Placement Validity
 
 ### 2026-10-15 - Implemented TerrainSurface, RoadPlacementSettings, RoadPlacementResult, RoadPlacementValidator and tests
 - **What changed**:
@@ -922,8 +922,8 @@ da0f9e4 P1-3c-i-fix.2: tests for stale pending start
   2. Created `tests/MedievalCityBuilder.Tests/TerrainSurfaceTests.cs`: 212 tests covering constructor validation, Centered extents, Contains (inside, edges, outside, NaN), SampleNormalized at vertices/midpoints/cell centers/max edge/corner, SampleHeight, heightmap ramp.
   3. Created `src/Roads/RoadPlacementSettings.cs`: immutable record with MaxSlope (>=0), SampleSpacing (>0), MinSegmentLength (>=0). Constructor validates NaN/infinity/range. Static Default with placeholder values (0.5, 1.0, 1.0) commented as PLACEHOLDER pending playtesting.
   4. Created `src/Roads/RoadPlacementResult.cs`: enum RoadPlacementFailure { None, OutOfBounds, TooShort, Underwater, TooSteep }, readonly record struct RoadPlacementResult with IsValid, Failure, static Valid, static Fail().
-  5. Created `src/Roads/RoadPlacementValidator.cs`: static class with XML comments. `ValidateNode`: OutOfBounds if not Contains (NaN counts), Underwater if SampleNormalized < SeaLevel (strict), else Valid. `ValidateSegment` (coordinates): checks endpoints in bounds → OutOfBounds, length < MinSegmentLength → TooShort, then walks straight line in N=ceil(length/SampleSpacing) equal steps (both endpoints included), at each sample: Underwater check, then slope check (|Δheight|/sampleDist > MaxSlope → TooSteep, equal allowed). First failure from p1 to p2 returned. Comment about direction symmetry of IsValid. `ValidateSegment` (graph): looks up nodes via graph.GetNode, calls coordinate overload; unknown nodes propagate ArgumentException.
-  6. Created `tests/MedievalCityBuilder.Tests/RoadPlacementValidatorTests.cs`: 243 tests covering settings validation, flat terrain valid, OutOfBounds, TooShort, Underwater (crossing column, ending on vertex, ValidateNode, exactly at sea level), Slope (ramp 0.5 allowed, 0.4 TooSteep, along z valid with 0), Direction symmetry (IsValid identical for p1→p2 and p2→p1), Priority (OutOfBounds > TooShort > Underwater/TooSteep), Graph overload (matches coordinates, unknown throws), Null arguments throw, Determinism, Diagnostic on seed 12345 terrain.
+  5. Created `src/Roads/RoadPlacementValidator.cs`: static class with XML comments. `ValidateNode`: OutOfBounds if not Contains (NaN counts), Underwater if SampleNormalized < SeaLevel (strict), else Valid. `ValidateSegment` (coordinates): checks endpoints in bounds â†’ OutOfBounds, length < MinSegmentLength â†’ TooShort, then walks straight line in N=ceil(length/SampleSpacing) equal steps (both endpoints included), at each sample: Underwater check, then slope check (|Î”height|/sampleDist > MaxSlope â†’ TooSteep, equal allowed). First failure from p1 to p2 returned. Comment about direction symmetry of IsValid. `ValidateSegment` (graph): looks up nodes via graph.GetNode, calls coordinate overload; unknown nodes propagate ArgumentException.
+  6. Created `tests/MedievalCityBuilder.Tests/RoadPlacementValidatorTests.cs`: 243 tests covering settings validation, flat terrain valid, OutOfBounds, TooShort, Underwater (crossing column, ending on vertex, ValidateNode, exactly at sea level), Slope (ramp 0.5 allowed, 0.4 TooSteep, along z valid with 0), Direction symmetry (IsValid identical for p1â†’p2 and p2â†’p1), Priority (OutOfBounds > TooShort > Underwater/TooSteep), Graph overload (matches coordinates, unknown throws), Null arguments throw, Determinism, Diagnostic on seed 12345 terrain.
 
 - **Commands**: 5 commits on `phase1-3a-road-validity`
   - `434f208 P1-3a-ii: Add TerrainSurface with bilinear sampling and tests`
@@ -964,7 +964,7 @@ Headless run completed successfully!
 ```
 Diagnostic counts for seed 12345: Valid=800, Underwater=99, TooSteep=0, OutOfBounds=0, TooShort=0, Total=899
 ```
-- **Note**: MaxSlope, SampleSpacing and MinSegmentLength are placeholders. If the diagnostic shows a very high or very low valid fraction, they need tuning with real play. (Valid fraction = 800/899 ≈ 89%, Underwater ≈ 11%, TooSteep = 0%)
+- **Note**: MaxSlope, SampleSpacing and MinSegmentLength are placeholders. If the diagnostic shows a very high or very low valid fraction, they need tuning with real play. (Valid fraction = 800/899 â‰ˆ 89%, Underwater â‰ˆ 11%, TooSteep = 0%)
 
 ### Git Log (phase1-3a-road-validity)
 ```
@@ -986,15 +986,15 @@ e70c8c8 Fix CS8601 warnings: add [MaybeNullWhen(false)] to TryGetNode and TryGet
   4. `tests/MedievalCityBuilder.Tests/RoadPlacementValidatorTests.cs` (243 tests including diagnostic)
   5. Verification: build, test, headless all pass; PROGRESS.md updated; TODO.md "Terrain validity" checked off
 - **Verified**: 
-  - `tools/build.ps1` → `Build succeeded!`
-  - `dotnet test tests/MedievalCityBuilder.Tests` → 405 tests passed (0 failed)
-  - `tools/run-headless.ps1` → Scene loads, prints TerrainView/WaterPlane/Main/Keys lines, exits 0, **zero WARNING/ERROR lines**
+  - `tools/build.ps1` â†’ `Build succeeded!`
+  - `dotnet test tests/MedievalCityBuilder.Tests` â†’ 405 tests passed (0 failed)
+  - `tools/run-headless.ps1` â†’ Scene loads, prints TerrainView/WaterPlane/Main/Keys lines, exits 0, **zero WARNING/ERROR lines**
 - **Blocked**: None.
-- **Next**: Phase 1.3 — Player road drawing, Entrance snapping, Basic stone/gold cost.
+- **Next**: Phase 1.3 â€” Player road drawing, Entrance snapping, Basic stone/gold cost.
 
 ---
 
-## Task Complete — 2026-10-15
+## Task Complete â€” 2026-10-15
 
 All 5 scope items of TASK P1-3a-ii implemented and verified:
 1. TerrainSurface with bilinear sampling (src/World/TerrainSurface.cs + 212 tests)
@@ -1067,11 +1067,11 @@ e70c8c8 Fix CS8601 warnings: add [MaybeNullWhen(false)] to TryGetNode and TryGet
   4. Build, tests, and headless run verified
 - **Verified**: Build succeeds; 188 tests pass; headless run clean with required log lines, zero WARNING/ERROR lines.
 - **Blocked**: None.
-- **Next**: Phase 1.3b — RoadGraph persistence or other Basic world items.
+- **Next**: Phase 1.3b â€” RoadGraph persistence or other Basic world items.
 
 ---
 
-## Final Report (2026-10-15) — Phase 1-3a
+## Final Report (2026-10-15) â€” Phase 1-3a
 
 ### Done
 1. Fixed CS8601 warnings by adding `using System.Diagnostics.CodeAnalysis;` and `[MaybeNullWhen(false)]` attributes to `TryGetNode` and `TryGetSegment` out parameters in `src/Roads/RoadGraph.cs`.
@@ -1085,9 +1085,9 @@ e70c8c8 Fix CS8601 warnings: add [MaybeNullWhen(false)] to TryGetNode and TryGet
 9. Rewrote `AreConnected` to use BFS over adjacency index instead of scanning all segments each iteration.
 10. Rewrote `CountConnectedComponents` to use BFS over adjacency index instead of scanning all segments each iteration.
 11. Added 5 new tests to `tests/MedievalCityBuilder.Tests/RoadGraphTests.cs` covering star graph, segment removal, node removal, 20000-node chain, and cycle plus pair components.
-12. Verified `tools/build.ps1` → Build succeeded!
-13. Verified `dotnet test tests/MedievalCityBuilder.Tests` → 188 tests passed, 0 failed.
-14. Verified `tools/run-headless.ps1` → All required log lines present, no WARNING or ERROR lines.
+12. Verified `tools/build.ps1` â†’ Build succeeded!
+13. Verified `dotnet test tests/MedievalCityBuilder.Tests` â†’ 188 tests passed, 0 failed.
+14. Verified `tools/run-headless.ps1` â†’ All required log lines present, no WARNING or ERROR lines.
 
 ### Verified
 - `tools/build.ps1` builds successfully with zero errors and zero warnings from src/Roads.
@@ -1101,7 +1101,7 @@ e70c8c8 Fix CS8601 warnings: add [MaybeNullWhen(false)] to TryGetNode and TryGet
 - None
 
 ### Next
-- Phase 1.3b — RoadGraph persistence or other Basic world items.
+- Phase 1.3b â€” RoadGraph persistence or other Basic world items.
 
 ### Git Log (phase1-3a-road-graph)
 ```
@@ -1156,11 +1156,11 @@ b0dec52 Merge phase1-2e-save-format: world save format and JSON serializer
 - **Done**: All 3 items implemented and verified.
 - **Verified**: Build succeeds; 157 tests pass (19 new from P1-2f + 138 previous); headless run clean with TerrainView and WaterPlane log lines, zero WARNING/ERROR lines.
 - **Blocked**: None.
-- **Next**: Phase 1.3 — Roads or other Basic world items.
+- **Next**: Phase 1.3 â€” Roads or other Basic world items.
 
 ---
 
-## P1-2f Item 3 — Refactor TerrainView.cs to Use WorldSaveData
+## P1-2f Item 3 â€” Refactor TerrainView.cs to Use WorldSaveData
 
 ### 2026-10-14 - Refactored TerrainView.cs
 - **What changed**:
@@ -1214,11 +1214,11 @@ c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and 
 - **Done**: Item 3 implemented and verified.
 - **Verified**: Build succeeds; 157 tests pass; headless run clean with both TerrainView and WaterPlane log lines (unchanged format), zero WARNING/ERROR lines.
 - **Blocked**: None.
-- **Next**: Phase 1.3 — Roads or other Basic world items.
+- **Next**: Phase 1.3 â€” Roads or other Basic world items.
 
 ---
 
-## P1-2f Item 4 — Add Save/Load/New World Key Handlers to Main.cs
+## P1-2f Item 4 â€” Add Save/Load/New World Key Handlers to Main.cs
 
 ### 2026-10-14 - Added save/load/new world key handlers
 - **What changed**:
@@ -1282,13 +1282,13 @@ c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and 
 
 ---
 
-## P1-2f Item 5 — Verification and Documentation
+## P1-2f Item 5 â€” Verification and Documentation
 
 ### 2026-10-14 - Verification complete
 - **What changed**: All verification commands executed and passed.
-  - `./tools/build.ps1` → Build succeeded (0 warnings, 0 errors)
-  - `dotnet test tests/MedievalCityBuilder.Tests` → 157 tests passed, 0 failed
-  - `./tools/run-headless.ps1` → Output contains both original TerrainView log lines unchanged, "MedievalCityBuilder: Main scene loaded", "Keys: F6 save, F7 load, N new random world", zero WARNING/ERROR lines
+  - `./tools/build.ps1` â†’ Build succeeded (0 warnings, 0 errors)
+  - `dotnet test tests/MedievalCityBuilder.Tests` â†’ 157 tests passed, 0 failed
+  - `./tools/run-headless.ps1` â†’ Output contains both original TerrainView log lines unchanged, "MedievalCityBuilder: Main scene loaded", "Keys: F6 save, F7 load, N new random world", zero WARNING/ERROR lines
 - **Git log --oneline -6**:
 ```
 a58dbc2 Item 5: Record verification results in PROGRESS.md, update TODO.md
@@ -1303,12 +1303,12 @@ c796155 Item 2: Wrap cleanup File.Delete in try/catch to ignore IOException and 
 - **Done**: Items 4 and 5 implemented and verified.
 - **Verified**: Build succeeds; 157 tests pass; headless run clean with all required log lines, zero WARNING/ERROR lines.
 - **Blocked**: None.
-- **Next**: Phase 1.3 — Roads or other Basic world items.
+- **Next**: Phase 1.3 â€” Roads or other Basic world items.
 
 ## Manual verification (user, F5)
 Phase 1.2 save/load: N generated new terrain each press; F7 before any save logged an error and left the world unchanged; F6 saved; F7 restored the original terrain exactly; camera bounds stopped at the terrain edge after N and F7; after relaunch F7 loaded the saved world. Verified manually on 2026-10-14. Result: pass.
 
-## P1-3a-i — Road Graph Data Model
+## P1-3a-i â€” Road Graph Data Model
 
 ### 2026-10-15 - Implemented RoadIds, RoadGraph and tests
 - **What changed**:
@@ -1370,23 +1370,23 @@ Phase 1.2 save/load: N generated new terrain each press; F7 before any save logg
 
 ---
 
-# Task P1-3a-ii-fix – Floating-point edge crash and overflow in road validation
+# Task P1-3a-ii-fix â€“ Floating-point edge crash and overflow in road validation
 
 ## 2026-10-15 - Fix ValidateSegment and TerrainSurface.Centered, add edge tests
 
 - **What changed**:
-  1. `src/World/TerrainSurface.cs` Centered – added null check throwing `ArgumentNullException(nameof(heightmap))`.
+  1. `src/World/TerrainSurface.cs` Centered â€“ added null check throwing `ArgumentNullException(nameof(heightmap))`.
   2. `src/Roads/RoadPlacementValidator.cs` ValidateSegment:
      - Compute samples via linear interpolation `sx = x1 * (1 - t) + x2 * t`, `sz = z1 * (1 - t) + z2 * t`; use exact `x2/z2` for `i == numSteps`.
      - Clamp each sample to `[surface.MinX, surface.MaxX]` and `[surface.MinZ, surface.MaxZ]`.
      - Steps count computed as double, `Math.Ceiling(length / SampleSpacing)`, capped at 1,000,000 before casting.
      - Removed always-true `if (i > 0)` guard; slope check runs for every sampled segment; comment updated.
   3. `tests/MedievalCityBuilder.Tests/RoadPlacementEdgeTests.cs` created (7 tests):
-     - Flat 11×11 cellSize 0.1 edge segments four edges + diagonals both directions, Valid no throw.
-     - Flat 13×7 cellSize 0.3 non-square edges, Valid.
-     - Explicit constructor 8×9 cellSize 0.7 origin 0.1/-0.3 edges, Valid.
+     - Flat 11Ã—11 cellSize 0.1 edge segments four edges + diagonals both directions, Valid no throw.
+     - Flat 13Ã—7 cellSize 0.3 non-square edges, Valid.
+     - Explicit constructor 8Ã—9 cellSize 0.7 origin 0.1/-0.3 edges, Valid.
      - Fuzz flat surface with DeterministicRandom(777): 3000 random segments with modes Min/Max/interior; ValidateSegment does not throw, `IsValid` symmetric, at least one Valid.
-     - Fuzz terrain surface seed 12345, GeneratorVersion 1, TerrainSettings.Default, 64×64 via TerrainGenerator + TerrainSurface.Centered(1.0,10.0); 3000 segments, no throw, symmetry, at least one Valid and at least one non-Valid.
+     - Fuzz terrain surface seed 12345, GeneratorVersion 1, TerrainSettings.Default, 64Ã—64 via TerrainGenerator + TerrainSurface.Centered(1.0,10.0); 3000 segments, no throw, symmetry, at least one Valid and at least one non-Valid.
      - Tiny spacing settings SampleSpacing 1e-9, MaxSlope 0.5, MinSegmentLength 1.0 on flat surface; length ~5 segment returns Valid without hang/throw.
      - TerrainSurface.Centered(null,1.0,10.0) throws ArgumentNullException.
 - **Commands**:
@@ -1460,9 +1460,12 @@ Phase 1.2 save/load: N generated new terrain each press; F7 before any save logg
      2 .   C r e a t e d   s r c / R o a d s / R o a d C o s t . c s :   r e a d o n l y   r e c o r d   s t r u c t   w i t h   c h e c k e d   a r i t h m e t i c   f o r   g o l d   a n d   s t o n e   s u m s . 
      3 .   C r e a t e d   s r c / R o a d s / R o a d C o s t C a l c u l a t o r . c s :   p u r e   s t a t i c   f u n c t i o n s   f o r   c o s t   a n d   s t o n e - u p k e e p .   C o s t s   u s e   c e i l ( l e n g t h ) ,   u p k e e p   u s e s   c e i l ( b a s e   +   s u r c h a r g e ) ;   c h e c k e d   a r i t h m e t i c   u s e d   t h r o u g h o u t .   I n c l u d e s   s a n i t y   c a p   1 , 0 0 0 , 0 0 0   f o r   l e n g t h . 
      4 .   C r e a t e d   t e s t s / M e d i e v a l C i t y B u i l d e r . T e s t s / R o a d C o s t T e s t s . c s   ( a p p r o x   1 0 0 +   t e s t s )   c o v e r i n g   a l l   r e q u i r e m e n t s :   s e t t i n g s   v a l i d a t i o n ,   d e f a u l t   v a l u e s ,   l e n g t h - b a s e d   c a l c u l a t i o n s ,   o v e r f l o w   c h e c k s ,   g r a p h   o v e r l o a d s   ( a d d i t i v i t y ,   d e t e r m i n i s m ,   i d   o r d e r ) ,   a n d   u s a g e - b a s e d   u p k e e p   ( r o u n d i n g   u p ,   l i n e a r   i n c r e a s e ) . 
-     5 .   U p d a t e d   T O D O . m d :   C h e c k e d   o f f   \  
- B a s i c  
- s t o n e / g o l d  
+     5 .   U p d a t e d   T O D O . m d :   C h e c k e d   o f f   \ 
+ 
+ B a s i c 
+ 
+ s t o n e / g o l d 
+ 
  c o s t \   i n   s e c t i o n   1 . 3 . 
  
  -   * * C o m m a n d s * * :   4   c o m m i t s   o n   p h a s e 1 - 3 b - r o a d - c o s t 
@@ -1501,10 +1504,11 @@ Phase 1.2 save/load: N generated new terrain each press; F7 before any save logg
  -   * * V e r i f i e d * * :   B u i l d   s u c c e e d s ;   a l l   2 8 6   t e s t s   p a s s ;   h e a d l e s s   r u n   c l e a n   w i t h   r e q u i r e d   l o g   l i n e s ,   z e r o   W A R N I N G / E R R O R   l i n e s . 
  -   * * B l o c k e d * * :   N o n e . 
  -   * * N e x t * * :   R e m a i n i n g   i t e m s   i n   T O D O . m d . 
-  
+ 
+ 
  ---
 
-## Phase 1-3c-i � Road Placement Controller (Plain C#, No Godot)
+## Phase 1-3c-i ï¿½ Road Placement Controller (Plain C#, No Godot)
 
 ### 2026-10-18 - Implemented RoadToolSettings, IRoadBudget, RoadToolResult, RoadPlacementController and comprehensive tests
 
@@ -1603,7 +1607,7 @@ df7b723 P1-3c-i: Add IRoadBudget
 - **Blocked**: None.
 - **Next**: Phase 1.3 -- Scene input for road drawing, ghost preview meshes, road meshes, segment splitting, saving road graph.
 - **Reminder**: "Player road drawing" in TODO.md is NOT checked off yet (needs scene work).
-## Task P1-3c-i-fix – Stale pending start tests
+## Task P1-3c-i-fix â€“ Stale pending start tests
 
 ### 2026-10-18 - Added 5 tests for stale pending start scenarios
 
@@ -1669,7 +1673,7 @@ df7b723 P1-3c-i: Add IRoadBudget
 - **Done**: All 5 tests implemented and verified.
 - **Verified**: Build succeeds; 314 tests pass; headless run clean with all required log lines, zero WARNING/ERROR lines; diagnostic counts unchanged.
 - **Blocked**: None.
-- **Next**: Phase 1.3 — Scene input for road drawing, ghost preview meshes, road meshes, segment splitting, saving road graph.
+- **Next**: Phase 1.3 â€” Scene input for road drawing, ghost preview meshes, road meshes, segment splitting, saving road graph.
 
 ## Known limitations (raycaster)
 - A ray that enters the terrain bounds and crosses the surface within one step of the boundary can be missed, because the first in-bounds sample is already below the surface.
@@ -1678,7 +1682,7 @@ df7b723 P1-3c-i: Add IRoadBudget
 
 ---
 
-## Task P1-3c-iii-a — Road Tool Node with Terrain Picking and Ghost Preview
+## Task P1-3c-iii-a â€” Road Tool Node with Terrain Picking and Ghost Preview
 
 ### 2026-10-18 - Implemented RoadTool node with terrain picking and ghost preview
 
@@ -1755,11 +1759,11 @@ ab7edab P1-3c-i-fix.3: record verification
   3. Main.cs creates and initializes RoadTool
   4. Build, tests (364 passed), and headless run all pass
 - **Verified**: 
-  - `tools/build.ps1` → `Build succeeded!`
-  - `dotnet test tests/MedievalCityBuilder.Tests` → 364 tests passed
-  - `tools/run-headless.ps1` → All required log lines present in order, zero WARNING/ERROR lines
+  - `tools/build.ps1` â†’ `Build succeeded!`
+  - `dotnet test tests/MedievalCityBuilder.Tests` â†’ 364 tests passed
+  - `tools/run-headless.ps1` â†’ All required log lines present in order, zero WARNING/ERROR lines
 - **Blocked**: None.
-- **Next**: Phase 1.3 — Click handling for road placement, road meshes, node markers, saving road graph.
+- **Next**: Phase 1.3 â€” Click handling for road placement, road meshes, node markers, saving road graph.
 - **Reminder**: "Player road drawing" in TODO.md is NOT checked off yet (click handling, meshes, saving are separate tasks).
 
 ## Manual verification (user, F5)
@@ -1884,7 +1888,7 @@ ff1131d Merge phase1-3c-iii-a-road-tool: road tool picking and ghost preview
 ```
 ---
 
-## Task P1-3c-iii-b-2 � Click-to-Place Roads with Markers and Terrain-Following Lines (Godot Presentation)
+## Task P1-3c-iii-b-2 ï¿½ Click-to-Place Roads with Markers and Terrain-Following Lines (Godot Presentation)
 
 ### 2026-10-18 - Rewrote RoadTool.cs completely with click handling, markers, and line display
 
@@ -1990,7 +1994,7 @@ Phase 1.3c-iii-b-2 click-to-place after the !is_inside_tree fix: roads, markers,
 Phase 1.3c-iii-b-2 click-to-place after the !is_inside_tree fix (setting GlobalPosition before AddChild on node markers): roads, markers, chaining, right click cancel and failure messages work, camera controls work with the tool on, console clean on click, N and F7. Verified manually. Result: pass.
 
 ---
-## P1-3c-iv-a.2,3 — RoadRibbonTests Creation and Verification
+## P1-3c-iv-a.2,3 â€” RoadRibbonTests Creation and Verification
 
 ### 2026-10-18 - Created RoadRibbonTests.cs with comprehensive tests for RoadRibbonMesh and RoadRibbonBuilder
 
@@ -2067,4 +2071,126 @@ bd71437 Merge phase1-3c-iii-b-2-click-place: click-to-place roads with markers a
 - **Done**: RoadRibbonTests.cs created and verified (47 tests); PROGRESS.md updated.
 - **Verified**: All three verification commands pass; 450 tests total (403 existing + 47 new); headless run clean with required log lines unchanged; zero WARNING/ERROR lines.
 - **Blocked**: None.
-- **Next**: Phase 1.3 — Road ribbon mesh rendering or other Basic world items.
+- **Next**: Phase 1.3 â€” Road ribbon mesh rendering or other Basic world items.
+- - -  
+  
+ # #   P h a s e   1 - 3 c - i v - b   � �    R o a d   R i b b o n   M e s h   P r e s e n t a t i o n  
+  
+ # # #   2 0 2 6 - 1 0 - 1 8   -   I m p l e m e n t e d   r o a d   r i b b o n   m e s h   p r e s e n t a t i o n  
+  
+ -   * * W h a t   c h a n g e d * * :    
+     1 .   U p d a t e d   ` s r c / P r e s e n t a t i o n / R o a d T o o l . c s `   t o   d i s p l a y   p l a c e d   r o a d   s e g m e n t s   a s   f l a t   r i b b o n   m e s h e s   i n s t e a d   o f   1 - p i x e l   l i n e s :  
+           -   A d d e d   p r i v a t e   c o n s t a n t s :   ` R o a d W i d t h   =   1 . 6 ` ,   ` R o a d S a m p l e S p a c i n g   =   1 . 0 ` ,   ` R o a d H e i g h t O f f s e t   =   0 . 2 `   w i t h   P L A C E H O L D E R   c o m m e n t s  
+           -   R e n a m e d   ` _ r o a d L i n e M a t e r i a l `   t o   ` _ r o a d M a t e r i a l `   ( k e p t   d a r k   b r o w n   c o l o r ,   u n s h a d e d ,   b a c k - f a c e   c u l l i n g )  
+           -   U p d a t e d   c l a s s   s u m m a r y   t o   r e f l e c t   r i b b o n   m e s h   d i s p l a y  
+           -   R e p l a c e d   ` R o a d P o l y l i n e . S a m p l e ` / L i n e S t r i p   c o d e   w i t h   ` R o a d R i b b o n B u i l d e r . B u i l d `   c a l l  
+           -   C o n v e r t e d   ` R o a d R i b b o n M e s h `   t o   ` A r r a y M e s h `   w i t h   v e r t i c e s ,   n o r m a l s ,   a n d   i n d i c e s  
+           -   C r e a t e d   ` M e s h I n s t a n c e 3 D `   n a m e d   ` R o a d R i b b o n _ { s e g m e n t I d } `   w i t h   C a s t S h a d o w   o f f ,   a d d e d   t o   ` _ v i s u a l s `  
+     2 .   U p d a t e d   ` d o c s / P R O G R E S S . m d `   w i t h   v e r i f i c a t i o n   r e s u l t s  
+  
+ -   * * C o m m a n d s * * :   C h a n g e s   m a d e   v i a   e d i t   t o o l ;   v e r i f i c a t i o n   v i a   d o t n e t   b u i l d ,   t o o l s / b u i l d . p s 1 ,   d o t n e t   t e s t ,   t o o l s / r u n - h e a d l e s s . p s 1  
+  
+ -   * * V e r i f i c a t i o n   R e s u l t s * * :  
+  
+     # # # #   ` d o t n e t   b u i l d   M e d i e v a l C i t y B u i l d e r . c s p r o j `   o u t p u t :  
+     ` ` `  
+     D e t e r m i n i n g   p r o j e c t s   t o   r e s t o r e . . .  
+     A l l   p r o j e c t s   a r e   u p - t o - d a t e   f o r   r e s t o r e .  
+     M e d i e v a l C i t y B u i l d e r   - >   C : \ U s e r s \ A d m i n \ C o d i n g \ m e d i e v a l - c i t y - b u i l d e r \ . g o d o t \ m o n o \ t e m p \ b i n \ D e b u g \ M e d i e v a l C i t y B u i l d e r . d l l  
+      
+     B u i l d   s u c c e e d e d .  
+             0   W a r n i n g ( s )  
+             0   E r r o r ( s )  
+      
+     T i m e   E l a p s e d   0 0 : 0 0 : 0 3 . 1 3  
+     ` ` `  
+  
+     # # # #   ` t o o l s / b u i l d . p s 1 `   o u t p u t :  
+     ` ` `  
+     B u i l d i n g   M e d i e v a l C i t y B u i l d e r . . .  
+     B u i l d   s u c c e e d e d !  
+     ` ` `  
+  
+     # # # #   ` d o t n e t   t e s t   t e s t s / M e d i e v a l C i t y B u i l d e r . T e s t s `   o u t p u t :  
+     ` ` `  
+     T e s t   R u n   S u c c e s s f u l .  
+     T o t a l   t e s t s :   4 5 0  
+               P a s s e d :   4 5 0  
+       T o t a l   t i m e :   1 . 1 3 2 2   S e c o n d s  
+     ` ` `  
+  
+     # # # #   ` t o o l s / r u n - h e a d l e s s . p s 1 `   o u t p u t :  
+     ` ` `  
+     R u n n i n g   M e d i e v a l C i t y B u i l d e r   i n   h e a d l e s s   m o d e . . .  
+     G o d o t :   C : \ U s e r s \ A d m i n \ D o w n l o a d s \ G o d o t _ v 4 . 7 . 2 - s t a b l e _ m o n o _ w i n 6 4 \ G o d o t _ v 4 . 7 . 2 - s t a b l e _ m o n o _ w i n 6 4 \ G o d o t _ v 4 . 7 . 2 - s t a b l e _ m o n o _ w i n 6 4 _ c o n s o l e . e x e  
+     P r o j e c t :   .  
+     G o d o t   E n g i n e   v 4 . 7 . 2 . s t a b l e . m o n o . o f f i c i a l . e d 1 d a f 0 b f   -   h t t p s : / / g o d o t e n g i n e . o r g  
+      
+     T e r r a i n V i e w :   s e e d = 1 2 3 4 5 ,   s i z e = S m a l l ,   v e r t i c e s = 1 6 6 4 1 ,   e x t e n t s = ( - 6 4 ,   6 4 ,   - 6 4 ,   6 4 )  
+     W a t e r P l a n e :   S e a L e v e l = 0 . 3 5 ,   u n d e r w a t e r F r a c t i o n = 0 . 0 7 7 2  
+     M e d i e v a l C i t y B u i l d e r :   M a i n   s c e n e   l o a d e d  
+     K e y s :   F 6   s a v e ,   F 7   l o a d ,   N   n e w   r a n d o m   w o r l d  
+     R o a d T o o l :   r e a d y   ( R   t o g g l e s   r o a d   t o o l )  
+     H e a d l e s s   r u n   c o m p l e t e d   s u c c e s s f u l l y !  
+     ` ` `  
+  
+     -   * * W A R N I N G / E R R O R   c h e c k * * :   N o   l i n e s   s t a r t i n g   w i t h   " W A R N I N G "   o r   " E R R O R "   i n   t h e   f u l l   h e a d l e s s   o u t p u t .   T h e   f i v e   r e q u i r e d   l i n e s   a r e   p r e s e n t   u n c h a n g e d .  
+     -   * * T e s t   t o t a l * * :   4 5 0   t e s t s   p a s s e d   ( n o   n e w   t e s t s ,   p r e s e n t a t i o n   c o d e )  
+     -   * * S e e d   1 2 3 4 5   d i a g n o s t i c * * :   V a l i d = 8 0 0 ,   U n d e r w a t e r = 9 9 ,   T o o S t e e p = 0 ,   O u t O f B o u n d s = 0 ,   T o o S h o r t = 0 ,   T o t a l = 8 9 9   ( u n c h a n g e d ,   v e r i f i e d   b y   p a s s i n g   t e s t s )  
+  
+ -   * * M a n u a l   C h e c k l i s t   ( u n v e r i f i e d   m a n u a l l y ) * * :  
+     -   [   ]   P r e s s   R   a n d   p l a c e   a   r o a d   a c r o s s   a   h i l l ;   a   f l a t   b r o w n   r i b b o n ,   a b o u t   1 . 6   u n i t s   w i d e ,   l i e s   o n   t h e   t e r r a i n   a n d   f o l l o w s   s l o p e s  
+     -   [   ]   O r b i t   t h e   c a m e r a   w i t h   Q / E   t o   s e e   i t   f r o m   s e v e r a l   a n g l e s   a n d   c o n f i r m   t h e   r i b b o n   i s   v i s i b l e   f r o m   a b o v e   a n d   d o e s   n o t   d i s a p p e a r  
+     -   [   ]   C h a i n   s e v e r a l   s e g m e n t s   a n d   c h e c k   t h e   j o i n t s   l o o k   a c c e p t a b l e   ( s t r i p s   o v e r l a p ,   w h i c h   i s   e x p e c t e d )  
+     -   [   ]   T h e   G o d o t   c o n s o l e   s h o w s   n o   e r r o r s   o r   w a r n i n g s ,   e s p e c i a l l y   n o n e   c o n t a i n i n g   i s _ i n s i d e _ t r e e  
+  
+ -   * * K N O W N   L I M I T A T I O N S * * :  
+     -   J u n c t i o n s   a r e   o v e r l a p p i n g   s t r i p s   w i t h   n o   s m o o t h i n g   ( j u n c t i o n   s m o o t h i n g   i s   a   l a t e r   t a s k )  
+     -   T h e   r i b b o n   c a n   c l i p   s l i g h t l y   i n t o   v e r y   s t e e p   t e r r a i n  
+     -   R o a d s   a r e   n o t   s a v e d  
+     -   F l a t   u p - n o r m a l s   a n d   a n   u n s h a d e d   m a t e r i a l  
+     -   S t r i p s   o v e r l a p   w h e r e   r o a d s   m e e t  
+  
+ # # #   G i t   L o g   ( p h a s e 1 - 3 c - i v - b - r i b b o n - s c e n e )  
+ ` ` `  
+ 7 3 f e 7 a 3   T r a c k   G o d o t   . u i d   f i l e s   f o r   r o a d   r i b b o n   c o d e  
+ e 0 b 6 8 0 4   M e r g e   p h a s e 1 - 3 c - i v - a - r i b b o n - g e o m e t r y :   r o a d   r i b b o n   g e o m e t r y  
+ 9 6 e f 2 1 d   P 1 - 3 c - i v - a . 3 :   r e c o r d   v e r i f i c a t i o n  
+ b e 4 7 b 9 c   P 1 - 3 c - i v - a . 2 :   a d d   R o a d R i b b o n T e s t s  
+ ` ` `  
+  
+ # # #   F i n a l   S t a t u s   ( P h a s e   1 - 3 c - i v - b )  
+ -   * * D o n e * * :   A l l   s c o p e   i t e m s   i m p l e m e n t e d   a n d   v e r i f i e d .  
+ -   * * V e r i f i e d * * :   B u i l d   s u c c e e d s   w i t h   z e r o   w a r n i n g s ;   t o o l s / b u i l d . p s 1   s u c c e e d s ;   a l l   4 5 0   t e s t s   p a s s ;   h e a d l e s s   r u n   c l e a n   w i t h   r e q u i r e d   l o g   l i n e s   u n c h a n g e d   a n d   z e r o   W A R N I N G / E R R O R   l i n e s .  
+ -   * * B l o c k e d * * :   N o n e .  
+ -   * * N e x t * * :   P h a s e   1 . 3   � �    n e x t   r o a d   i t e m s   o r   o t h e r   B a s i c   w o r l d   i t e m s .  
+ # #   F i n a l   R e p o r t  
+  
+ # # #   D o n e  
+ 1 .   s r c / P r e s e n t a t i o n / R o a d T o o l . c s   u p d a t e d   w i t h   r i b b o n   m e s h   r e n d e r i n g   f o r   p l a c e d   r o a d   s e g m e n t s  
+ 2 .   C o n s t a n t s   a d d e d :   R o a d W i d t h = 1 . 6 ,   R o a d S a m p l e S p a c i n g = 1 . 0 ,   R o a d H e i g h t O f f s e t = 0 . 2   w i t h   P L A C E H O L D E R   c o m m e n t s  
+ 3 .   _ r o a d L i n e M a t e r i a l   r e n a m e d   t o   _ r o a d M a t e r i a l   w i t h   s a m e   c o l o r   a n d   s e t t i n g s  
+ 4 .   A d d S e g m e n t V i s u a l s   r e p l a c e d   l i n e   d i s p l a y   w i t h   R o a d R i b b o n B u i l d e r . B u i l d   a n d   A r r a y M e s h   c r e a t i o n  
+ 5 .   C l a s s   s u m m a r y   u p d a t e d   t o   r e f l e c t   r i b b o n   m e s h   d i s p l a y  
+ 6 .   B u i l d   v e r i f i e d :   z e r o   w a r n i n g s ,   z e r o   e r r o r s  
+ 7 .   t o o l s / b u i l d . p s 1   v e r i f i e d :   B u i l d   s u c c e e d e d  
+ 8 .   T e s t s   v e r i f i e d :   a l l   4 5 0   t e s t s   p a s s  
+ 9 .   H e a d l e s s   r u n   v e r i f i e d :   a l l   r e q u i r e d   l i n e s   p r e s e n t ,   n o   W A R N I N G / E R R O R  
+ 1 0 .   d o c s / P R O G R E S S . m d   u p d a t e d   w i t h   f u l l   v e r i f i c a t i o n   o u t p u t  
+  
+ # # #   V e r i f i e d  
+ -   B u i l d   s u c c e e d s   w i t h   z e r o   w a r n i n g s   a n d   z e r o   e r r o r s  
+ -   t o o l s / b u i l d . p s 1   s u c c e e d s  
+ -   d o t n e t   t e s t   r u n s   4 5 0   t e s t s ,   a l l   p a s s  
+ -   t o o l s / r u n - h e a d l e s s . p s 1   o u t p u t s   a l l   f i v e   r e q u i r e d   l i n e s   u n c h a n g e d  
+ -   N o   W A R N I N G   o r   E R R O R   l i n e s   i n   h e a d l e s s   o u t p u t  
+ -   S e e d   1 2 3 4 5   d i a g n o s t i c   u n c h a n g e d   ( V a l i d = 8 0 0 ,   U n d e r w a t e r = 9 9 ,   T o o S t e e p = 0 ,   O u t O f B o u n d s = 0 ,   T o o S h o r t = 0 ,   T o t a l = 8 9 9 )  
+  
+ # # #   B l o c k e d  
+ -   N o n e  
+  
+ # # #   N e x t  
+ -   P h a s e   1 . 3   � �    n e x t   r o a d   i t e m s   o r   o t h e r   B a s i c   w o r l d   i t e m s  
+ 
+## Manual verification (user, F5)
+Phase 1.3c-iv-b road ribbon: placed segments render as flat brown ribbons that follow the terrain, visible from above and from orbit angles, joints overlap acceptably, console clean. Verified manually. Result: pass.
