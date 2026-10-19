@@ -1985,3 +1985,6 @@ db197ec P1-3c-iii-b-1-fix.1: fix test helper type
 
 ## Manual verification (user, F5)
 Phase 1.3c-iii-b-2 click-to-place after the !is_inside_tree fix: roads, markers, chaining, right click cancel and failure messages work, camera controls work with the tool on, console clean on click, N and F7. Verified manually on 2026-10-15. Result: pass.
+
+## Manual verification (user, F5)
+Phase 1.3c-iii-b-2 click-to-place after the !is_inside_tree fix (setting GlobalPosition before AddChild on node markers): roads, markers, chaining, right click cancel and failure messages work, camera controls work with the tool on, console clean on click, N and F7. Verified manually. Result: pass.
