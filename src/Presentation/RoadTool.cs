@@ -9,10 +9,11 @@ using MedievalCityBuilder.World;
 namespace MedievalCityBuilder.Presentation;
 
 /// <summary>
-/// Road tool presentation node. Handles input, terrain picking, markers, and simple line display.
+/// Road tool presentation node. Handles input, terrain picking, markers, and ribbon mesh display.
 /// All road placement rules live in src/Roads; this node only handles presentation.
 /// The road graph is not saved yet, so roads are lost on F7, N, and restart.
-/// The road ribbon mesh is a separate task (1.3c-iv).
+/// Placed segments are drawn as flat ribbon meshes; strips overlap where roads meet
+/// (junction smoothing is a later task); the node markers stay.
 /// </summary>
 public partial class RoadTool : Node3D
 {
@@ -27,7 +28,13 @@ public partial class RoadTool : Node3D
     private Dictionary<int, MeshInstance3D> _nodeMarkers = new();
     private MeshInstance3D? _pendingMarker;
     private StandardMaterial3D? _nodeMarkerMaterial;
-    private StandardMaterial3D? _roadLineMaterial;
+    private StandardMaterial3D? _roadMaterial;
+
+    // PLACEHOLDER pending visual tuning
+    private const double RoadWidth = 1.6;          // Total width of the road ribbon
+    private const double RoadSampleSpacing = 1.0;  // Desired distance between centerline samples
+    private const double RoadHeightOffset = 0.2;   // Lifts ribbon above terrain mesh (flat triangles differ slightly from bilinear surface)
+
     private string _lastMessage = "";
     private bool _active = false;
 
@@ -71,7 +78,7 @@ public partial class RoadTool : Node3D
             AlbedoColor = new Color(0.95f, 0.5f, 0.1f, 1.0f) // Orange
         };
 
-        _roadLineMaterial = new StandardMaterial3D
+        _roadMaterial = new StandardMaterial3D
         {
             ShadingMode = StandardMaterial3D.ShadingModeEnum.Unshaded,
             AlbedoColor = new Color(0.35f, 0.2f, 0.1f, 1.0f) // Dark brown
@@ -295,7 +302,7 @@ public partial class RoadTool : Node3D
 
     private void AddSegmentVisuals(RoadToolResult result)
     {
-        if (_graph == null || _terrain == null || _visuals == null || _nodeMarkerMaterial == null || _roadLineMaterial == null)
+        if (_graph == null || _terrain == null || _visuals == null || _nodeMarkerMaterial == null || _roadMaterial == null)
         {
             return;
         }
@@ -327,35 +334,41 @@ public partial class RoadTool : Node3D
             }
         }
 
-        // Add road line
+        // Add road ribbon mesh
         var segment = _graph.GetSegment(result.Segment.Value);
         var nodeA = _graph.GetNode(segment.A);
         var nodeB = _graph.GetNode(segment.B);
 
-        var points = RoadPolyline.Sample(_terrain.Surface, nodeA.X, nodeA.Z, nodeB.X, nodeB.Z, 1.0, 0.15);
+        // Placement controller guarantees valid inputs
+        var ribbon = RoadRibbonBuilder.Build(_terrain.Surface, nodeA.X, nodeA.Z, nodeB.X, nodeB.Z, RoadWidth, RoadSampleSpacing, RoadHeightOffset);
 
-        var vertices = new Vector3[points.Count];
-        for (int i = 0; i < points.Count; i++)
+        // Convert RoadRibbonMesh to ArrayMesh
+        int vertexCount = ribbon.Positions.Length / 3;
+        var vertices = new Vector3[vertexCount];
+        var normals = new Vector3[vertexCount];
+
+        for (int i = 0; i < vertexCount; i++)
         {
-            vertices[i] = new Vector3((float)points[i].X, (float)points[i].Y, (float)points[i].Z);
+            vertices[i] = new Vector3(ribbon.Positions[i * 3], ribbon.Positions[i * 3 + 1], ribbon.Positions[i * 3 + 2]);
+            normals[i] = new Vector3(ribbon.Normals[i * 3], ribbon.Normals[i * 3 + 1], ribbon.Normals[i * 3 + 2]);
         }
 
         var arrayMesh = new ArrayMesh();
         var arrays = new Godot.Collections.Array();
         arrays.Resize((int)Mesh.ArrayType.Max);
         arrays[(int)Mesh.ArrayType.Vertex] = vertices;
-        arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.LineStrip, arrays);
+        arrays[(int)Mesh.ArrayType.Normal] = normals;
+        arrays[(int)Mesh.ArrayType.Index] = ribbon.Indices;
+        arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
 
-        var lineInstance = new MeshInstance3D
+        var ribbonInstance = new MeshInstance3D
         {
             Mesh = arrayMesh,
-            Name = $"RoadLine_{result.Segment.Value.Value}",
+            Name = $"RoadRibbon_{result.Segment.Value.Value}",
             CastShadow = GeometryInstance3D.ShadowCastingSetting.Off
         };
-        lineInstance.SetSurfaceOverrideMaterial(0, _roadLineMaterial);
-        _visuals.AddChild(lineInstance);
-
-        // Lines are 1 pixel wide; a proper road ribbon mesh is a later task (1.3c-iv).
+        ribbonInstance.SetSurfaceOverrideMaterial(0, _roadMaterial);
+        _visuals.AddChild(ribbonInstance);
     }
 
     public override void _Process(double delta)
