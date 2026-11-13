@@ -10,7 +10,9 @@ Bounded, self-contained task prompts for the AI coder (OpenCode). Each file is o
 3. Review its report, run the verification commands yourself if you want a second check, then move to the next file.
 
 ### Semi-automated (driver script)
-Run `tools/run-prompts.ps1`. It executes prompts in numeric order, runs `dotnet test` after each, allows a bounded number of fix attempts on failure, and records progress. See the script header for options. Do an attended test run before leaving it overnight.
+Run `tools/run-prompts.ps1`. It executes the next pending prompt on a fresh `task/<prompt-name>` branch off main, runs `dotnet test` after, allows up to 3 fix attempts on failure, requires a clean tree, pushes the branch, and stops. Merge the PR, then run the script again for the next prompt. Do an attended test run before leaving it overnight.
+
+Note: the `.done` markers are local-only (gitignored) — they track which prompts this machine has executed, not which PRs are merged. Always merge the PR before running the next prompt.
 
 ## Rules
 
