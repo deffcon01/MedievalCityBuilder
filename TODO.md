@@ -35,7 +35,7 @@
 - [x] Basic stone/gold cost.
 
 ### 1.4 Zoning
-- [ ] Zone brush.
+- [x] Zone brush.
 - [ ] Zone painting.
 - [ ] Minimum zone size.
 - [ ] Maximum distance from road/path.
