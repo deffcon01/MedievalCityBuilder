@@ -26,3 +26,6 @@ obj/
 .env.*
 
 opencode.json
+
+# prompt library progress markers
+prompts/.done/
