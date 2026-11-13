@@ -17,6 +17,7 @@ namespace MedievalCityBuilder.Roads
         private readonly RoadCostSettings _cost;
         private readonly RoadToolSettings _tool;
         private readonly IRoadBudget? _budget;
+        private readonly IBuildingEntranceProvider? _entranceProvider;
 
         private bool _hasPendingStart;
         private double _pendingStartX;
@@ -26,6 +27,14 @@ namespace MedievalCityBuilder.Roads
         /// <summary>
         /// Creates a new RoadPlacementController.
         /// </summary>
+        /// <param name="graph">Road graph.</param>
+        /// <param name="surface">Terrain surface for validation.</param>
+        /// <param name="water">Water settings for sea level.</param>
+        /// <param name="placement">Road placement settings.</param>
+        /// <param name="cost">Road cost settings.</param>
+        /// <param name="tool">Road tool settings (includes snap radii).</param>
+        /// <param name="budget">Optional budget for cost validation.</param>
+        /// <param name="entranceProvider">Optional provider of building entrance points for snapping.</param>
         public RoadPlacementController(
             RoadGraph graph,
             TerrainSurface surface,
@@ -33,7 +42,8 @@ namespace MedievalCityBuilder.Roads
             RoadPlacementSettings placement,
             RoadCostSettings cost,
             RoadToolSettings tool,
-            IRoadBudget? budget = null)
+            IRoadBudget? budget = null,
+            IBuildingEntranceProvider? entranceProvider = null)
         {
             _graph = graph ?? throw new ArgumentNullException(nameof(graph));
             _surface = surface ?? throw new ArgumentNullException(nameof(surface));
@@ -42,6 +52,7 @@ namespace MedievalCityBuilder.Roads
             _cost = cost ?? throw new ArgumentNullException(nameof(cost));
             _tool = tool ?? throw new ArgumentNullException(nameof(tool));
             _budget = budget;
+            _entranceProvider = entranceProvider;
         }
 
         /// <summary>
@@ -150,6 +161,17 @@ namespace MedievalCityBuilder.Roads
             if (bestNode != null)
             {
                 return (bestNode.X, bestNode.Z, bestNode.Id);
+            }
+
+            // Try entrance snapping if not snapped to a road node
+            if (_entranceProvider != null)
+            {
+                var entranceSnap = RoadEntranceSnapper.SnapToEntrance(
+                    x, z, _entranceProvider.GetEntrancePoints(), _tool.EntranceSnapRadius);
+                if (entranceSnap.IsSnapped)
+                {
+                    return (entranceSnap.X, entranceSnap.Z, null);
+                }
             }
 
             return (x, z, null);

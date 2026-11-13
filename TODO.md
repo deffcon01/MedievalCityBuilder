@@ -31,7 +31,7 @@
 - [x] Road path representation.
 - [x] Player road drawing.
 - [x] Terrain validity.
-- [ ] Entrance snapping.
+- [x] Entrance snapping.
 - [x] Basic stone/gold cost.
 
 ### 1.4 Zoning
