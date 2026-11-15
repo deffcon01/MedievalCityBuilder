@@ -13,7 +13,7 @@ namespace MedievalCityBuilder.Tests
             return ZoneRegistry.CreateStartingRegistry();
         }
 
-        private static ZoneGrid CreateGrid(ZoneRegistry registry = null)
+        private static ZoneGrid CreateGrid(ZoneRegistry registry = null!)
         {
             registry ??= CreateRegistry();
             return new ZoneGrid(registry, -5.0, -5.0, 1.0, 10, 10);
@@ -325,6 +325,96 @@ namespace MedievalCityBuilder.Tests
                 var curr = cells[i];
                 Assert.True(curr.Z > prev.Z || (curr.Z == prev.Z && curr.X > prev.X));
             }
+        }
+
+        [Fact]
+        public void Grid_GetBrushCells_HugeRadius_CoversWholeGrid()
+        {
+            var grid = CreateGrid();
+
+            var huge = 1e12;
+            var cells = grid.GetBrushCells(0, 0, huge);
+            Assert.Equal(100, cells.Count);
+
+            var cells6 = grid.GetBrushCells(0, 0, 1e6);
+            Assert.Equal(100, cells6.Count);
+
+            var cells15 = grid.GetBrushCells(0, 0, 1e15);
+            Assert.Equal(100, cells15.Count);
+
+            // Row-major: strictly increasing by (Z, then X)
+            for (int i = 1; i < cells.Count; i++)
+            {
+                var prev = cells[i - 1];
+                var curr = cells[i];
+                Assert.True(curr.Z > prev.Z || (curr.Z == prev.Z && curr.X > prev.X),
+                    $"Not row-major at index {i}: ({prev.X},{prev.Z}) -> ({curr.X},{curr.Z})");
+            }
+
+            // Calling twice returns identical lists
+            var cellsAgain = grid.GetBrushCells(0, 0, huge);
+            Assert.Equal(cells, cellsAgain);
+        }
+
+        [Fact]
+        public void Grid_GetBrushCells_HugePointCoordinates_ReturnEmpty()
+        {
+            var grid = CreateGrid();
+
+            Assert.Empty(grid.GetBrushCells(1e12, 0, 1.0));
+            Assert.Empty(grid.GetBrushCells(-1e12, 0, 1.0));
+            Assert.Empty(grid.GetBrushCells(0, 1e12, 1.0));
+            Assert.Empty(grid.GetBrushCells(0, -1e12, 1.0));
+            Assert.Empty(grid.GetBrushCells(1e300, 1e300, 1.0));
+        }
+
+        [Fact]
+        public void Grid_PaintErase_HugeRadius()
+        {
+            var grid = CreateGrid();
+
+            int painted = grid.Paint(0, 0, 1e12, new ZoneTypeId(1));
+            Assert.Equal(100, painted);
+            Assert.Equal(100, grid.CountCells(new ZoneTypeId(1)));
+
+            int erased = grid.Erase(0, 0, 1e12);
+            Assert.Equal(100, erased);
+            Assert.Equal(0, grid.PaintedCellCount);
+        }
+
+        [Fact]
+        public void Grid_GetBrushCells_EdgeCases()
+        {
+            var grid = CreateGrid();
+
+            var cells = grid.GetBrushCells(1004, 0, 1000.0);
+            Assert.Equal(10, cells.Count);
+            for (int i = 0; i < 10; i++)
+            {
+                Assert.Equal(9, cells[i].X);
+                Assert.Equal(i, cells[i].Z);
+            }
+
+            Assert.Empty(grid.GetBrushCells(1005, 0, 1000.0));
+        }
+
+        [Fact]
+        public void Grid_GetBrushCells_InvalidInputs_Throw()
+        {
+            var grid = CreateGrid();
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => grid.GetBrushCells(double.NaN, 0, 1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => grid.GetBrushCells(0, double.PositiveInfinity, 1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => grid.GetBrushCells(0, 0, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => grid.GetBrushCells(0, 0, -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => grid.GetBrushCells(0, 0, double.NaN));
+            Assert.Throws<ArgumentOutOfRangeException>(() => grid.GetBrushCells(0, 0, double.PositiveInfinity));
+
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => grid.GetBrushCells(0, 0, 0));
+            Assert.False(string.IsNullOrEmpty(ex.ParamName));
+
+            ex = Assert.Throws<ArgumentOutOfRangeException>(() => grid.GetBrushCells(0, 0, -1));
+            Assert.False(string.IsNullOrEmpty(ex.ParamName));
         }
 
         [Fact]
