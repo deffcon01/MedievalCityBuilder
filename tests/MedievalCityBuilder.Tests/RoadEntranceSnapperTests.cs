@@ -22,7 +22,7 @@ namespace MedievalCityBuilder.Tests
             Assert.Equal(EntranceA.X, result.X);
             Assert.Equal(EntranceA.Z, result.Z);
             Assert.True(result.SnappedEntrance.HasValue);
-            Assert.Equal(EntranceA, result.SnappedEntrance.Value);
+            Assert.Equal(EntranceA, result.SnappedEntrance!.Value);
         }
 
         [Fact]
@@ -50,7 +50,8 @@ namespace MedievalCityBuilder.Tests
             Assert.True(result.IsSnapped);
             Assert.Equal(EntranceA.X, result.X);
             Assert.Equal(EntranceA.Z, result.Z);
-            Assert.Equal(EntranceA, result.SnappedEntrance.Value);
+            Assert.True(result.SnappedEntrance.HasValue);
+            Assert.Equal(EntranceA, result.SnappedEntrance!.Value);
         }
 
         [Fact]
@@ -65,7 +66,8 @@ namespace MedievalCityBuilder.Tests
             var result = RoadEntranceSnapper.SnapToEntrance(11.0, 10.0, entrances, 2.0);
 
             Assert.True(result.IsSnapped);
-            Assert.Equal(entrance1, result.SnappedEntrance.Value);
+            Assert.True(result.SnappedEntrance.HasValue);
+            Assert.Equal(entrance1, result.SnappedEntrance!.Value);
         }
 
         [Fact]
@@ -136,7 +138,8 @@ namespace MedievalCityBuilder.Tests
             var result = RoadEntranceSnapper.SnapToEntrance(10.5, 10.5, entrances, 1.0);
 
             Assert.True(result.IsSnapped);
-            Assert.Equal(goodEntrance, result.SnappedEntrance.Value);
+            Assert.True(result.SnappedEntrance.HasValue);
+            Assert.Equal(goodEntrance, result.SnappedEntrance!.Value);
         }
 
         [Fact]
@@ -149,7 +152,8 @@ namespace MedievalCityBuilder.Tests
             var result = RoadEntranceSnapper.SnapToEntrance(11.0, 10.0, entrances, 1.0);
 
             Assert.True(result.IsSnapped);
-            Assert.Equal(entrance, result.SnappedEntrance.Value);
+            Assert.True(result.SnappedEntrance.HasValue);
+            Assert.Equal(entrance, result.SnappedEntrance!.Value);
         }
 
         [Fact]
@@ -178,7 +182,8 @@ namespace MedievalCityBuilder.Tests
             var result = RoadEntranceSnapper.SnapToEntrance(11.0, 10.0, entrances, 2.0);
 
             Assert.True(result.IsSnapped);
-            Assert.Equal(e1, result.SnappedEntrance.Value);
+            Assert.True(result.SnappedEntrance.HasValue);
+            Assert.Equal(e1, result.SnappedEntrance!.Value);
         }
     }
 }
