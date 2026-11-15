@@ -61,7 +61,7 @@ namespace MedievalCityBuilder.Zoning
         private void ValidateCoords(int x, int z)
         {
             if (x < 0 || x >= CellsX || z < 0 || z >= CellsZ)
-                throw new ArgumentOutOfRangeException($"Coordinates ({x}, {z}) are out of range.");
+                throw new ArgumentOutOfRangeException("coordinates", $"Coordinates ({x}, {z}) are out of range.");
         }
 
         public ZoneTypeId Get(int x, int z)
@@ -132,7 +132,7 @@ namespace MedievalCityBuilder.Zoning
             if (double.IsNaN(worldX) || double.IsInfinity(worldX) ||
                 double.IsNaN(worldZ) || double.IsInfinity(worldZ) ||
                 double.IsNaN(radius) || double.IsInfinity(radius) || radius <= 0)
-                throw new ArgumentOutOfRangeException("Brush inputs must be finite and radius > 0.");
+                throw new ArgumentOutOfRangeException("radius", "Brush inputs must be finite and radius > 0.");
         }
 
         public IReadOnlyList<ZoneCell> GetBrushCells(double worldX, double worldZ, double radius)
@@ -148,16 +148,23 @@ namespace MedievalCityBuilder.Zoning
             double minWorldZ = worldZ - radius;
             double maxWorldZ = worldZ + radius;
 
-            int minXIdx = (int)Math.Floor((minWorldX - MinX) / CellSize);
-            int maxXIdx = (int)Math.Floor((maxWorldX - MinX) / CellSize);
-            int minZIdx = (int)Math.Floor((minWorldZ - MinZ) / CellSize);
-            int maxZIdx = (int)Math.Floor((maxWorldZ - MinZ) / CellSize);
+            double fMinX = Math.Floor((minWorldX - MinX) / CellSize);
+            double fMaxX = Math.Floor((maxWorldX - MinX) / CellSize);
+            double fMinZ = Math.Floor((minWorldZ - MinZ) / CellSize);
+            double fMaxZ = Math.Floor((maxWorldZ - MinZ) / CellSize);
 
-            // Clamp to grid bounds
-            minXIdx = Math.Max(0, minXIdx);
-            maxXIdx = Math.Min(CellsX - 1, maxXIdx);
-            minZIdx = Math.Max(0, minZIdx);
-            maxZIdx = Math.Min(CellsZ - 1, maxZIdx);
+            // If the bounding box is entirely outside the grid, return nothing.
+            if (fMaxX < 0 || fMinX > CellsX - 1 || fMaxZ < 0 || fMinZ > CellsZ - 1)
+                return cells;
+
+            // Clamp in double space BEFORE casting to int. Casting huge doubles
+            // to int overflows on x64 (giving int.MinValue, an empty brush) while
+            // saturating on ARM (a full brush). Clamping first keeps the result
+            // identical on every platform.
+            int minXIdx = (int)Math.Max(0.0, fMinX);
+            int maxXIdx = (int)Math.Min(CellsX - 1.0, fMaxX);
+            int minZIdx = (int)Math.Max(0.0, fMinZ);
+            int maxZIdx = (int)Math.Min(CellsZ - 1.0, fMaxZ);
 
             for (int z = minZIdx; z <= maxZIdx; z++)
             {
