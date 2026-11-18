@@ -1,51 +1,38 @@
-# Task 003: Zone minimum size validation
+# Task 003: Zone minimum size (flagging)
+
+> **Read `prompts/_RULES.md` first and follow it. It overrides anything below that conflicts with it.**
 
 ## Objective
-
-Implement minimum zone size validation for painted zones. When a player paints a zone, each connected painted region of a zone type must be at least a minimum number of cells to count as a valid zone; regions below the minimum are rejected (not painted / erased).
-
-This is a pure domain-logic task: no Godot scene code.
+Implement minimum-size analysis for painted zones. Connected painted regions of one zone type that are smaller than that zone's minimum size are FLAGGED as not developable. Painting is never blocked and nothing is erased (decision already made, see `_RULES.md`). This is a pure domain task: no Godot code.
 
 ## Read first
-
-1. `AGENTS.md` — mandatory workflow
-2. `DESIGN.md` — Section 5 "Zoning": "Each zone has minimum sizing rules, maximum distance from a valid path/road, terrain suitability requirements"
-3. `ARCHITECTURE.md` — data-driven rule, testing section
-4. `docs/PROGRESS.md` — latest entries (P1-4a section)
-5. `src/Zoning/ZoneGrid.cs` and `src/Zoning/ZoneRegistry.cs` — existing grid/brush
-6. `tests/MedievalCityBuilder.Tests/ZoneGridTests.cs` — existing test style
+1. `AGENTS.md`, then `prompts/_RULES.md`
+2. `DESIGN.md` section 5 "Zoning" ("Each zone has minimum sizing rules, maximum distance from a valid path/road, terrain suitability requirements") and section 6 (parcel generation)
+3. `ARCHITECTURE.md`: data-driven rule and testing section
+4. `docs/PROGRESS.md`: the P1-4a zoning section
+5. `src/Zoning/ZoneGrid.cs`, `src/Zoning/ZoneRegistry.cs` and `tests/MedievalCityBuilder.Tests/ZoneGridTests.cs` (existing test style, including the seeded fuzz test)
 
 ## Allowed changes
-
-- New file `src/Zoning/ZoneValidation.cs` (or similar) — pure C#, no Godot types
-- New file `tests/MedievalCityBuilder.Tests/ZoneValidationTests.cs`
-- `src/Zoning/ZoneRegistry.cs` / `ZoneDefinition.cs` — only if adding a `MinSizeCells` field is needed
-- `docs/PROGRESS.md` — append entry
-- `TODO.md` — check off "Minimum zone size"
+- New `src/Zoning/ZoneSizeRules.cs`, `src/Zoning/ZoneRegion.cs`, `src/Zoning/ZoneRegionAnalyzer.cs` (pure C#)
+- New tests `tests/MedievalCityBuilder.Tests/ZoneRegionTests.cs` (and `ZoneSizeRulesTests.cs` if you prefer)
+- `docs/PROGRESS.md` (append-only), `TODO.md` ("Minimum zone size" only)
+- Do NOT change `ZoneGrid`, `ZoneRegistry` or `ZoneDefinition` (their data is part of the future save format; minimum sizes live in a separate rules object).
 
 ## Requirements
-
-1. Zone definitions must carry a minimum size (cells). Exact default value is a prototype placeholder — make it configurable, do not treat it as final balance.
-2. Validation must operate on the grid: given painted cells, identify connected regions of the same zone type (4-neighbor connectivity), and flag regions below the minimum.
-3. Provide a method that paints a brush stroke through validation: cells that would create an undersized region are either rejected or painted-then-cleaned — pick one approach, document it in the code, and test it.
-4. No hard-coded zone lists in validation logic (data-driven rule).
-5. Deterministic: same input, same result. Use no System.Random.
-6. Tests: connected-region detection, minimum-size boundary (exactly at min = valid, min-1 = invalid), multiple regions in one stroke, reproducibility.
+1. `ZoneSizeRules`: immutable; a default minimum size in cells (>= 1; PLACEHOLDER default 4) and optional per-zone overrides (zone id to minimum size, each >= 1, no override for `ZoneTypeId.None`). `GetMinSize(ZoneTypeId)`. A static `Default` labeled PLACEHOLDER. Stored in sorted order so enumeration is deterministic. Validate every argument.
+2. `ZoneRegion`: zone id, cell count, cell bounding box (min and max x and z), `IsUndersized`, and an index.
+3. `ZoneRegionAnalyzer.Analyze(ZoneGrid grid, ZoneSizeRules rules)` returns a `ZoneRegionMap`: 4-neighbour connected regions of the same zone id (diagonal cells are NOT connected; adjacent cells of different zones are NOT merged). Use an iterative flood fill (no recursion; it must handle a single region of 1,000,000 cells). Regions are ordered by their first cell in a row-major scan. `ZoneRegionMap` exposes `Regions`, `RegionIndexAt(x, z)` (-1 for empty cells), `IsCellInValidRegion(x, z)`, `GetRegionCells(regionIndex)` (cells in row-major order), `ValidCellCount` and `UndersizedCellCount`. Out-of-range coordinates and unknown region indexes throw `ArgumentOutOfRangeException` with the parameter name first.
+4. Flag-only behavior, documented in the class comment: the analyzer reads the grid and never modifies it. Later prompts (road distance, terrain, zone search) consume `IsCellInValidRegion`.
+5. Deterministic: same grid and rules give identical results. No `System.Random`.
+6. Tests: connected-region detection; minimum-size boundary (exactly at the minimum is valid, one below is undersized, one above is valid); two zones touching are separate regions; diagonal cells are separate regions; several regions in one grid with the expected order; per-zone override beats the default; empty grid; a full grid of one zone; a 1,000-by-1,000 grid with one huge region (no stack overflow); region cell lists are row-major and add up to `PaintedCellCount`; rules validation (0, negative, override for None); determinism; a seeded fuzz test (`DeterministicRandom`) on 20-by-20 grids with random brush strokes, comparing the analyzer with a brute-force reference (for example union-find or a simple recursive flood fill on the small grid) for region count, region sizes and per-cell validity.
 
 ## Definition of done
-
-- `dotnet build MedievalCityBuilder.csproj` — 0 warnings, 0 errors
-- `dotnet test` — all tests pass (existing 468 + new)
-- `tools/run-headless.ps1` — unchanged expected output, no WARNING/ERROR
-- `docs/PROGRESS.md` updated with what/commands/results
-- TODO.md checkbox updated
+- All verification steps in `_RULES.md` pass with real output; test total increased.
+- `docs/PROGRESS.md` updated by append only; TODO.md "Minimum zone size" checked.
 
 ## Stop conditions
-
-- Stop and report when the task is complete and verified.
-- If a design decision is required that DESIGN.md does not cover (e.g., whether undersized paint should be rejected or auto-erased), stop and report the options instead of guessing.
-- Do not implement road-distance or terrain validation in this task.
+- Stop and report when complete and verified.
+- Do not implement road-distance or terrain validation, and do not change painting behavior.
 
 ## Commit
-
-One or two small commits, message: `P1-4c: zone minimum size validation`
+`P1-4c: zone minimum size analysis (flag only)` (final commit; one commit per numbered item before it).

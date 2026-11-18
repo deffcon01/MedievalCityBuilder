@@ -1,5 +1,7 @@
 # Task 013: Citizen and household data models
 
+> **Read `prompts/_RULES.md` first and follow it. It overrides anything below that conflicts with it.**
+
 ## Objective
 
 Implement the citizen and household domain data models — the first Phase 1.6 task. Data only, no simulation behavior yet.
@@ -14,7 +16,7 @@ Implement the citizen and household domain data models — the first Phase 1.6 t
 ## Allowed changes
 
 - New `src/Population/` folder — models, pure C#
-- `tests/MedievalCityBuilder.Tests.csproj` — include new source folder
+- `tests/MedievalCityBuilder.Tests/MedievalCityBuilder.Tests.csproj` — include new source folder
 - New tests
 - `docs/PROGRESS.md`, `TODO.md`
 
@@ -28,7 +30,7 @@ Implement the citizen and household domain data models — the first Phase 1.6 t
 
 ## Definition of done
 
-- `dotnet build` — 0 warnings, 0 errors; `dotnet test` — all pass
+- Every verification step in `prompts/_RULES.md` passes with real output: 0 warnings in `dotnet build MedievalCityBuilder.csproj` AND no warning lines in the `dotnet test` output; the test total increased; `docs/PROGRESS.md` updated by append only
 - `tools/run-headless.ps1` — unchanged, no WARNING/ERROR
 - `docs/PROGRESS.md` updated; TODO.md "Citizen data model" and "Household data model" checked
 

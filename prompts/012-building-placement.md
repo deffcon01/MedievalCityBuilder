@@ -1,5 +1,7 @@
 # Task 012: Building placement
 
+> **Read `prompts/_RULES.md` first and follow it. It overrides anything below that conflicts with it.**
+
 ## Objective
 
 Implement building placement: when a parcel has a selected asset, create the building entity (domain state), place it in the world, and present a placeholder visual. This completes Phase 1.5.
@@ -30,7 +32,7 @@ Implement building placement: when a parcel has a selected asset, create the bui
 
 ## Definition of done
 
-- `dotnet build` — 0 warnings, 0 errors; `dotnet test` — all pass
+- Every verification step in `prompts/_RULES.md` passes with real output: 0 warnings in `dotnet build MedievalCityBuilder.csproj` AND no warning lines in the `dotnet test` output; the test total increased; `docs/PROGRESS.md` updated by append only
 - `tools/run-headless.ps1` — unchanged or extended with new expected lines, no WARNING/ERROR
 - `docs/PROGRESS.md` updated; TODO.md "Building placement" checked — Phase 1.5 complete
 
