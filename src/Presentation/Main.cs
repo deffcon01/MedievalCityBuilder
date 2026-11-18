@@ -11,6 +11,7 @@ public partial class Main : Node3D
     private TerrainView _terrainView = null!;
     private CameraRig _cameraRig = null!;
     private RoadTool _roadTool = null!;
+    private ZoneTool _zoneTool = null!;
 
     public override void _Ready()
     {
@@ -25,6 +26,10 @@ public partial class Main : Node3D
         _roadTool = new RoadTool { Name = "RoadTool" };
         AddChild(_roadTool);
         _roadTool.Initialize(_terrainView);
+
+        _zoneTool = new ZoneTool { Name = "ZoneTool" };
+        AddChild(_zoneTool);
+        _zoneTool.Initialize(_terrainView);
     }
 
     private void ApplyCameraBounds()
