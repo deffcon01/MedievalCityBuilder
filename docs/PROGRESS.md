@@ -2482,3 +2482,49 @@ P1-4a-cleanup: fixed platform-dependent cast in ZoneGrid.GetBrushCells (clamp in
 
 ## P1-4a-cleanup verification (written by hand from terminal output)
 Branch phase1-4a-zone-grid. ZoneGrid.GetBrushCells now clamps the index range in double space before casting to int; ArgumentOutOfRangeException parameter names fixed; 5 platform-invariance tests added; CS8625 and CS8629 test warnings fixed without pragmas. Build: 0 warnings, 0 errors. Tests: total 486, failed 0, no warning lines. Seed 12345 diagnostic: Valid=800, Underwater=99, TooSteep=0, OutOfBounds=0, TooShort=0, Total=899. Headless: the five expected lines, no WARNING or ERROR. The agent appended only one line to this file, so this entry was added manually.
+## Phase 1-4b — Zone Painting Scene Brush
+
+### 2026-11-17 - Implemented in-game zone painting tool (scene brush)
+- **What changed**:
+  1. Created `src/Zoning/ZoneOverlayMesh.cs`: pure C# mesh data structure holding positions, per-vertex zone IDs, indices, and quad count with validation.
+  2. Created `src/Zoning/ZoneOverlayBuilder.cs`: pure C# static builder that generates a terrain-hugging overlay mesh from ZoneGrid and TerrainSurface. Each painted cell becomes one quad (4 vertices, 2 triangles) with corners clamped to surface bounds. Winding order guarantees negative Y cross product for every triangle.
+  3. Created `src/Presentation/ToolMode.cs`: enum { None, Road, Zone } for mutual exclusion between RoadTool and ZoneTool.
+  4. Created `src/Presentation/ZoneTool.cs`: presentation node handling input (Z toggles, 1-8 selects zone, [/] adjusts brush radius 0.5-8.0, LMB paints, RMB erases), terrain picking via TerrainRaycaster, brush ghost (transparent disc), zone overlay mesh with vertex colors by category (Residential green, Commercial blue, Industrial orange, Mixed-use purple, alpha ~0.55), and HUD label.
+  5. Updated `src/Presentation/RoadTool.cs`: added static `ActiveTool` property, `TryActivate()` method, mutual exclusion logic with ZoneTool.
+  6. Updated `src/Presentation/Main.cs`: wires ZoneTool initialization alongside RoadTool.
+  7. Created `tests/MedievalCityBuilder.Tests/ZoneOverlayTests.cs`: 27 automated tests covering empty grid, single-cell flat/ramp, winding (negative Y cross product), zone ID mapping, row-major order, vertex count, determinism, grid-larger-than-terrain clamping, non-binary cell size, and seeded fuzz test with 200 random brushes.
+- **Commands**: 2 commits on `task/002-zone-scene-brush`
+- **Verification Results**:
+  - `./tools/build.ps1` output: `Build succeeded!`
+  - `dotnet test tests/MedievalCityBuilder.Tests` output: `Passed! - Failed: 0, Passed: 513, Skipped: 0, Total: 513`
+  - `./tools/run-headless.ps1` output:
+    ```
+    TerrainView: seed=12345, size=Small, vertices=16641, extents=(-64, 64, -64, 64)
+    WaterPlane: SeaLevel=0.35, underwaterFraction=0.0772
+    MedievalCityBuilder: Main scene loaded
+    Keys: F6 save, F7 load, N new random world
+    RoadTool: ready (R toggles road tool)
+    ZoneTool: ready (Z toggles zone tool)
+    Headless run completed successfully!
+    ```
+  - **WARNING/ERROR check**: No lines starting with "WARNING" or "ERROR" in the full headless output. All seven expected lines present.
+- **Done**: All scope items implemented and verified:
+  1. Pure C# domain classes: ZoneOverlayMesh and ZoneOverlayBuilder
+  2. Presentation classes: ToolMode enum and ZoneTool
+  3. Integration: RoadTool mutual exclusion and Main wiring
+  4. Automated tests: 27 new tests (513 total)
+- **Verified**: `dotnet build` zero warnings/errors; `tools/build.ps1` succeeds; `dotnet test` all 513 tests pass (486 previous + 27 new); `tools/run-headless.ps1` output matches expected lines with no WARNING/ERROR
+- **Blocked**: None
+- **Next**: Phase 1-4c — Minimum zone size validation (per TODO.md)
+
+### Git Log (task/002-zone-scene-brush)
+```
+6cfd7e9 P1-4b: in-game zone painting scene brush and terrain-hugging zone overlay
+4668f67 P1-4b: update TODO.md - zone painting complete
+```
+
+### Final Status (Phase 1-4b)
+- **Done**: In-game zone painting scene brush with terrain-hugging overlay
+- **Verified**: Build succeeds; all 513 tests pass; headless run clean with seven expected log lines
+- **Blocked**: None
+- **Next**: Phase 1-4c — Minimum zone size validation
