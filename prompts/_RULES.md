@@ -14,6 +14,7 @@ These rules apply to EVERY prompt in this library. If a prompt conflicts with th
 - One commit per numbered item in the prompt's Requirements. The prompt's final Commit line is the message for the last commit.
 - Hard limits: stop after 40 tool calls, or after 3 failed attempts on the same error, or when the same tool call fails twice in a row (for example a loop of failed read or skill calls). Then write a short status and finish. If the provider drops the stream, stop; the user re-runs.
 - Do not enter plan mode and do not wait for further input.
+- Write everything in English: your messages and final report, code comments, commit messages and docs/PROGRESS.md entries. Never answer in another language.
 - If a design decision is needed that DESIGN.md and this file do not cover, stop and report the options. Do not guess.
 
 ## Code rules
