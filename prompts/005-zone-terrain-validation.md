@@ -1,8 +1,10 @@
 # Task 005: Zone terrain validation
 
+> **Read `prompts/_RULES.md` first and follow it. It overrides anything below that conflicts with it.**
+
 ## Objective
 
-Implement terrain suitability validation for zoning: zone cells on unsuitable terrain (underwater, too steep) cannot be painted or are flagged as undevelopable.
+Implement terrain suitability validation for zoning: zone cells on unsuitable terrain (underwater, too steep) are flagged as undevelopable.
 
 ## Read first
 
@@ -19,6 +21,7 @@ Implement terrain suitability validation for zoning: zone cells on unsuitable te
 - `docs/PROGRESS.md`, `TODO.md`
 
 ## Requirements
+0. Flag only: painting is never blocked and nothing is erased (decision already made in `prompts/_RULES.md`). Unsuitable cells are reported as not developable.
 
 1. Given a world position/cell, return terrain suitability (underwater / too steep / valid) using existing terrain data. Do not duplicate terrain logic — consume existing classes.
 2. Slope threshold is a configurable placeholder.
@@ -27,7 +30,7 @@ Implement terrain suitability validation for zoning: zone cells on unsuitable te
 
 ## Definition of done
 
-- `dotnet build` — 0 warnings, 0 errors; `dotnet test` — all pass
+- Every verification step in `prompts/_RULES.md` passes with real output: 0 warnings in `dotnet build MedievalCityBuilder.csproj` AND no warning lines in the `dotnet test` output; the test total increased; `docs/PROGRESS.md` updated by append only
 - `tools/run-headless.ps1` — unchanged, no WARNING/ERROR
 - `docs/PROGRESS.md` updated; TODO.md "Terrain validation" checked
 

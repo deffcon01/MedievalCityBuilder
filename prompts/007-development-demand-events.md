@@ -1,5 +1,7 @@
 # Task 007: Development demand events
 
+> **Read `prompts/_RULES.md` first and follow it. It overrides anything below that conflicts with it.**
+
 ## Objective
 
 Implement the simulation's development demand events: when the simulation needs a building (new household needs housing, business opens, demand increases), it raises a demand event that the building development system will later consume.
@@ -29,7 +31,7 @@ Implement the simulation's development demand events: when the simulation needs 
 
 ## Definition of done
 
-- `dotnet build` — 0 warnings, 0 errors; `dotnet test` — all pass
+- Every verification step in `prompts/_RULES.md` passes with real output: 0 warnings in `dotnet build MedievalCityBuilder.csproj` AND no warning lines in the `dotnet test` output; the test total increased; `docs/PROGRESS.md` updated by append only
 - `tools/run-headless.ps1` — unchanged, no WARNING/ERROR
 - `docs/PROGRESS.md` updated; TODO.md "Development demand event" checked
 

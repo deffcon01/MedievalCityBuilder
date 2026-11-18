@@ -1,5 +1,7 @@
 # Task 004: Zone maximum distance from road
 
+> **Read `prompts/_RULES.md` first and follow it. It overrides anything below that conflicts with it.**
+
 ## Objective
 
 Implement the zone placement rule that painted zone cells must be within a maximum distance of a valid road/path to be developable.
@@ -28,7 +30,7 @@ Implement the zone placement rule that painted zone cells must be within a maxim
 
 ## Definition of done
 
-- `dotnet build` — 0 warnings, 0 errors; `dotnet test` — all pass
+- Every verification step in `prompts/_RULES.md` passes with real output: 0 warnings in `dotnet build MedievalCityBuilder.csproj` AND no warning lines in the `dotnet test` output; the test total increased; `docs/PROGRESS.md` updated by append only
 - `tools/run-headless.ps1` — unchanged, no WARNING/ERROR
 - `docs/PROGRESS.md` updated; TODO.md "Maximum distance from road/path" checked
 

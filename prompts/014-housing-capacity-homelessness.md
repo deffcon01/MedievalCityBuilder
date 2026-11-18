@@ -1,5 +1,7 @@
 # Task 014: Housing capacity, household placement, homelessness
 
+> **Read `prompts/_RULES.md` first and follow it. It overrides anything below that conflicts with it.**
+
 ## Objective
 
 Implement housing capacity tracking, household creation, placement of households into homes, and homelessness handling.
@@ -28,7 +30,7 @@ Implement housing capacity tracking, household creation, placement of households
 
 ## Definition of done
 
-- `dotnet build` — 0 warnings, 0 errors; `dotnet test` — all pass
+- Every verification step in `prompts/_RULES.md` passes with real output: 0 warnings in `dotnet build MedievalCityBuilder.csproj` AND no warning lines in the `dotnet test` output; the test total increased; `docs/PROGRESS.md` updated by append only
 - `tools/run-headless.ps1` — unchanged, no WARNING/ERROR
 - `docs/PROGRESS.md` updated; TODO.md "Housing capacity", "Household creation", "Household placement into homes", "Homelessness" checked
 

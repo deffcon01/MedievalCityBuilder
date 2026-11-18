@@ -1,5 +1,7 @@
 # Task 008: Available-zone search
 
+> **Read `prompts/_RULES.md` first and follow it. It overrides anything below that conflicts with it.**
+
 ## Objective
 
 Implement the search for developable zoned space: given a demand event, find the painted zone cells that pass all validation rules (minimum size, road distance, terrain) and are large enough for development.
@@ -27,7 +29,7 @@ Implement the search for developable zoned space: given a demand event, find the
 
 ## Definition of done
 
-- `dotnet build` — 0 warnings, 0 errors; `dotnet test` — all pass
+- Every verification step in `prompts/_RULES.md` passes with real output: 0 warnings in `dotnet build MedievalCityBuilder.csproj` AND no warning lines in the `dotnet test` output; the test total increased; `docs/PROGRESS.md` updated by append only
 - `tools/run-headless.ps1` — unchanged, no WARNING/ERROR
 - `docs/PROGRESS.md` updated; TODO.md "Available-zone search" checked
 
