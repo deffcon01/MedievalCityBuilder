@@ -38,7 +38,40 @@ public partial class RoadTool : Node3D
     private string _lastMessage = "";
     private bool _active = false;
 
+    /// <summary>
+    /// The currently active editing tool. Static so RoadTool and ZoneTool
+    /// can refuse to turn on while the other is active.
+    /// </summary>
+    public static ToolMode ActiveTool { get; set; } = ToolMode.None;
+
     public bool Active => _active;
+
+    /// <summary>
+    /// Attempts to activate the road tool. Returns false (and logs a message) if the
+    /// zone tool is already active. If the road tool is already active, this is a no-op.
+    /// </summary>
+    public bool TryActivate()
+    {
+        if (ActiveTool == ToolMode.Zone)
+        {
+            _lastMessage = "Turn off the zone tool first (Z)";
+            GD.Print(_lastMessage);
+            return false;
+        }
+
+        if (_active)
+        {
+            return true;
+        }
+
+        ActiveTool = ToolMode.Road;
+        _active = true;
+
+        if (_ghost != null) _ghost.Visible = _active;
+        if (_labelLayer != null) _labelLayer.Visible = _active;
+
+        return true;
+    }
 
     /// <summary>
     /// Initializes the road tool with the given terrain view.
@@ -202,20 +235,22 @@ public partial class RoadTool : Node3D
     {
         if (@event is InputEventKey keyEvent && keyEvent.Pressed && !keyEvent.Echo && keyEvent.Keycode == Key.R)
         {
-            _active = !_active;
-
-            if (!_active)
+            if (_active)
             {
                 // Tool turning OFF
+                _active = false;
+                ActiveTool = ToolMode.None;
+
                 _controller?.Cancel();
                 if (_ghost != null) _ghost.Hide();
                 if (_pendingMarker != null) _pendingMarker.Hide();
                 _lastMessage = "";
                 if (_label != null) _label.Text = "";
             }
-
-            if (_ghost != null) _ghost.Visible = _active;
-            if (_labelLayer != null) _labelLayer.Visible = _active;
+            else
+            {
+                TryActivate();
+            }
 
             GetViewport().SetInputAsHandled();
         }
@@ -245,7 +280,7 @@ public partial class RoadTool : Node3D
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (!_active || @event is not InputEventMouseButton mouseEvent || !mouseEvent.Pressed)
+        if (!_active || ActiveTool != ToolMode.Road || @event is not InputEventMouseButton mouseEvent || !mouseEvent.Pressed)
         {
             return;
         }
@@ -373,7 +408,7 @@ public partial class RoadTool : Node3D
 
     public override void _Process(double delta)
     {
-        if (!_active || _terrain == null || _controller == null || _ghost == null || _ghostMaterial == null || _label == null)
+        if (!_active || _terrain == null || _controller == null || ActiveTool != ToolMode.Road || _ghost == null || _ghostMaterial == null || _label == null)
         {
             return;
         }
