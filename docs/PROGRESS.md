@@ -2528,3 +2528,6 @@ Branch phase1-4a-zone-grid. ZoneGrid.GetBrushCells now clamps the index range in
 - **Verified**: Build succeeds; all 513 tests pass; headless run clean with seven expected log lines
 - **Blocked**: None
 - **Next**: Phase 1-4c — Minimum zone size validation
+
+## Manual verification (user, F5), task 002 zone painting tool
+Z toggles the tool and shows the ghost disc and label; keys 1 to 8 change the zone; left-drag paints a tinted overlay that hugs the terrain and right-drag erases it; [ and ] resize the brush; the overlay stays visible while orbiting; the road and zone tools refuse to be active together; wheel zoom and WASD still work; N and F7 clear the zones (known limitation until the save tasks); the console showed no errors or warnings. Result: pass.

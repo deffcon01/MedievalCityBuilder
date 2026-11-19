@@ -36,7 +36,7 @@
 
 ### 1.4 Zoning
 - [x] Zone brush.
-- [ ] Zone painting.
+- [x] Zone painting.
 - [ ] Minimum zone size.
 - [ ] Maximum distance from road/path.
 - [ ] Terrain validation.
